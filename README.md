@@ -1,5 +1,3 @@
-Warning : work is in progress and the final script is not available yet
-
 What is Pi Hotspot
 ==================
 
