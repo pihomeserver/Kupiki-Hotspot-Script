@@ -16,7 +16,7 @@ I hope that it will help you to get your Pi hotspot
 Requirements
 ============
 
-What do you need for to execute the script :
+What are the requirements ?
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
@@ -30,7 +30,7 @@ Usage
 You just have to download the script, edit it to update it's parameters, execute and wait ... If the wifi on the Raspberry is not already configured, don't worry, the script will do it
 
 - Download the script with the following command   
-` git ...`
+` git clone https://github.com/pihomeserver/Pi-Hotspot.git `
 - Edit the script and update the first lines to define your own configuration
 - Execute the script using sudo (or as root but you already may know that it's not recommanded)
 
