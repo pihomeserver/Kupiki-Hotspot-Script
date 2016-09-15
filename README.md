@@ -1,17 +1,15 @@
 What is Pi Hotspot
 ==================
 
-This project is the latest version of [the tutorial](http://www.pihomeserver.fr/2015/08/05/raspberry-pi-coovachilli-et-freeradius-pour-un-hotspot-wifi-avec-portail-captif/) created first on the blog [Pi Home Server](http://www.pihomeserver.fr)
+This project is the latest version of [the tutorial](http://www.pihomeserver.fr/2015/08/05/raspberry-pi-coovachilli-et-freeradius-pour-un-hotspot-wifi-avec-portail-captif/) created first on my blog [Pi Home Server](http://www.pihomeserver.fr)
 Created on a Raspberry Pi 2, some functionalities and tools where not available for the Raspberry Pi 3. Also the tutorial was a little bit difficult to 
-implement beacause of the too many steps. That's why i decide to create a script that will help you to build easily your own hotspot.
+implement because of too many steps. That's why i decided to create a script that will help you to build your own hotspot automatically.
 
-Once the script executed,you will get :
+Once the script is executed, you will get :
 - A Wifi hotspot using the integrated wifi chipset
 - A captive portal based on coovachilli
-- A user management based on freeRadius
+- An authenticate control based on freeRadius
 - An interface for freeRadius based on daloRadius
-
-I hope that it will help you to get your Pi hotspot
 
 Requirements
 ============
