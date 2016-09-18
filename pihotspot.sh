@@ -9,10 +9,6 @@ LOGNAME="pihotspot.log"
 LOGPATH="/var/log/"
 # Password for user root (MySql not system)
 MYSQL_PASSWORD="pihotspot"
-# WAN interface (the one with Internet)
-WAN_INTERFACE="eth0"
-# LAN interface (the one for the hotspot)
-LAN_INTERFACE="wlan0"
 # Name of the hotspot that will be visible for users/customers
 HOTSPOT_NAME="pihotspot"
 # IP of the hotspot
@@ -28,6 +24,10 @@ COOVACHILLI_SECRETKEY="change-me"
 #
 # *************************************
 
+# WAN interface (the one with Internet)
+WAN_INTERFACE="eth0"
+# LAN interface (the one for the hotspot)
+LAN_INTERFACE="wlan0"
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Daloradius URL
@@ -93,6 +93,8 @@ prepare_install
 
 jumpto "nextstep"
 
+nextstep:
+
 execute_command "apt-get update" true "Updating system"
 execute_command "apt-get upgrade -y" true "Upgrading all packages"
 
@@ -108,9 +110,9 @@ fi
 display_message "Update interface configuration"
 cat >> /etc/network/interfaces << EOT
 
-auto wlan0
-allow-hotplug wlan0
-iface wlan0 inet static
+auto $LAN_INTERFACE
+allow-hotplug $LAN_INTERFACE
+iface $LAN_INTERFACE inet static
     address $HOTSPOT_IP
     netmask 255.255.255.0
     network $HOTSPOT_NETWORK
@@ -118,7 +120,8 @@ iface wlan0 inet static
 EOT
 check_returned_code $?
 
-execute_command "ifup wlan0" true "Activating the Wifi interface"
+execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
+execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
 
 execute_command "apt-get install -y --force-yes debconf-utils" true "Installing debconf tools"
 
@@ -163,8 +166,6 @@ execute_command "/etc/init.d/networking restart" true "Restarting network servic
 execute_command "apt-get install -y --force-yes git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake" true "Installing compilation tools"
 execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE" true "Cloning CoovaChilli project"
 
-nextstep:
-
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
 execute_command "cd /usr/src && dpkg -i coova-chilli_1.3.0_armhf.deb" true "Installing CoovaChilli package"
 
@@ -177,11 +178,11 @@ sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
 check_returned_code $?
 
 display_message "Configuring CoovaChilli WAN interface"
-sed -i 's/\# HS_WANIF=eth0/HS_WANIF=eth0/g' /etc/chilli/defaults
+sed -i "s/\# HS_WANIF=eth0/HS_WANIF=$WAN_INTERFACE/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Configuring CoovaChilli LAN interface"
-sed -i 's/HS_LANIF=eth1/HS_LANIF=wlan0/g' /etc/chilli/defaults
+sed -i "s/HS_LANIF=eth1/HS_LANIF=$LAN_INTERFACE/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Configuring CoovaChilli hotspot network"
@@ -230,7 +231,7 @@ display_message "Creating configuration file for hostapd"
 echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' >> /etc/default/hostapd
 check_returned_code $?
 display_message "Configuring hostapd"
-echo "interface=wlan0
+echo "interface=$LAN_INTERFACE
 driver=nl80211
 ssid=$HOTSPOT_NAME
 hw_mode=g
@@ -304,7 +305,7 @@ execute_command "service nginx restart" true "Restarting Nginx"
 execute_command "service hostapd restart" true "Restarting hostapd"
 
 display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
-MY_IP=`ifconfig eth0 | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
+MY_IP=`ifconfig $WAN_INTERFACE | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
 
 # Last message to display once installation ended successfully
 
