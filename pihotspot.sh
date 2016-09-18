@@ -2,28 +2,40 @@
 
 # PLEASE EDIT NEXT LINES TO DEFINE YOUR OWN CONFIGURATION
 
+# Name of the log file
 LOGNAME="pihotspot.log"
-LOGPATH="/var/log/" # be sure to add a / at the end of the path
-
+# Path where the logfile will be stored
+# be sure to add a / at the end of the path
+LOGPATH="/var/log/"
+# Password for user root (MySql not system)
 MYSQL_PASSWORD="pihotspot"
-
+# WAN interface (the one with Internet)
+WAN_INTERFACE="eth0"
+# LAN interface (the one for the hotspot)
+LAN_INTERFACE="wlan0"
+# Name of the hotspot that will be visible for users/customers
 HOTSPOT_NAME="pihotspot"
+# IP of the hotspot
 HOTSPOT_IP="192.168.10.1"
+# Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
-
-COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
+# Secret word for CoovaChilli
 COOVACHILLI_SECRETKEY="change-me" 
-
-DALORADIUS_ARCHIVE="https://sourceforge.net/projects/daloradius/files/latest/download"
-
-HASERL_URL="http://downloads.sourceforge.net/project/haserl/haserl-devel/haserl-0.9.35.tar.gz"
-HASERL_ARCHIVE="haserl-0.9.35"
 
 # *************************************
 #
 # PLEASE DO NOT MODIFY THE LINES BELOW
 #
 # *************************************
+
+# CoovaChilli GIT URL
+COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
+# Daloradius URL
+DALORADIUS_ARCHIVE="https://sourceforge.net/projects/daloradius/files/latest/download"
+# Haserl URL
+HASERL_URL="http://downloads.sourceforge.net/project/haserl/haserl-devel/haserl-0.9.35.tar.gz"
+# Haserl archive name based on the URL (keep the same version)
+HASERL_ARCHIVE="haserl-0.9.35"
 
 check_returned_code() {
     RETURNED_CODE=$@
@@ -44,7 +56,7 @@ display_message() {
 }
 
 execute_command() {
-    display_message "Executing command : $1"
+    display_message "$3"
     COMMAND="$1 >> $LOGPATH$LOGNAME 2>&1"
     eval $COMMAND
     COMMAND_RESULT=$?
@@ -81,170 +93,143 @@ prepare_install
 
 jumpto "nextstep"
 
-nextstep:
+execute_command "apt-get update" true "Updating system"
+execute_command "apt-get upgrade -y" true "Upgrading all packages"
 
-execute_command "apt-get update"
-execute_command "apt-get upgrade -y"
-
-execute_command "ifconfig -a | grep wlan0" false
+execute_command "ifconfig -a | grep wlan0" false "Checking if wlan0 interface already exists"
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "Wifi interface not found. Upgrading the system first"
-    execute_command "apt dist-upgrade -y --force-yes"
-    execute_command "apt-get install apt-utils firmware-brcm80211 -y --force-yes"
+    execute_command "apt dist-upgrade -y --force-yes" true "Upgrading the distro. Be patient"
+    execute_command "apt-get install apt-utils firmware-brcm80211 -y --force-yes" true "Install Wifi firmware"
     display_message "Please reboot and run the script again"
     exit 1
 fi
 
-COMMAND="echo '' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo 'auto wlan0' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo 'allow-hotplug wlan0' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo 'iface wlan0 inet static' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo '    address $HOTSPOT_IP' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo '    netmask 255.255.255.0' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo '    network $HOTSPOT_NETWORK' >> /etc/network/interfaces"
-eval $COMMAND
-check_returned_code $?
-COMMAND="echo '    post-up echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/network/interfaces"
-eval $COMMAND
+display_message "Update interface configuration"
+cat >> /etc/network/interfaces << EOT
+
+auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet static
+    address $HOTSPOT_IP
+    netmask 255.255.255.0
+    network $HOTSPOT_NETWORK
+    post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+EOT
 check_returned_code $?
 
-execute_command "ifup wlan0"
+execute_command "ifup wlan0" true "Activating the Wifi interface"
 
-execute_command "apt-get install -y --force-yes debconf-utils"
+execute_command "apt-get install -y --force-yes debconf-utils" true "Installing debconf tools"
 
-execute_command "debconf-set-selections <<< 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD'"
-execute_command "debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD'"
-execute_command "apt-get install -y --force-yes debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables"
+execute_command "debconf-set-selections <<< 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD'" true "Adding MySql password"
+execute_command "debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD'" true "Adding MySql password (confirmation)"
+execute_command "apt-get install -y --force-yes debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables" true "Installing MySql, freeradius, iptables and other dependencies"
 
 display_message "Creating freeradius database"
-COMMAND="echo 'create database radius;' | mysql -u root -p$MYSQL_PASSWORD"
-eval $COMMAND
+echo 'create database radius;' | mysql -u root -p$MYSQL_PASSWORD
 check_returned_code $?
 
-display_message "Install freeradius schema"
-COMMAND="mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/schema.sql"
-eval $COMMAND
+display_message "Installing freeradius schema"
+mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/schema.sql
 check_returned_code $?
 
-display_message "Create administrator privileges"
-COMMAND="mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/admin.sql"
-eval $COMMAND
+display_message "Creating administrator privileges"
+mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/admin.sql
 check_returned_code $?
 
-display_message "Create additional tables"
-COMMAND="mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/nas.sql"
-eval $COMMAND
+display_message "Creating additional tables"
+mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/nas.sql
 check_returned_code $?
 
-display_message "Update freeradius configuration"
+display_message "Updating freeradius configuration"
 sed -i '/^#.*\$INCLUDE sql\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
-#COMMAND="sed 's/\#.*\$INCLUDE sql\.conf/\$INCLUDE sql\.conf/g' /etc/freeradius/radiusd.conf > /tmp/radiusd.conf"
-#eval $COMMAND
 check_returned_code $?
 
-#execute_command "cp /tmp/radiusd.conf /etc/freeradius/radiusd.conf"
-execute_command "service freeradius stop"
+execute_command "service freeradius stop" true "Stoping freeradius service to update the configuration"
 
-display "Activating SQL authentication"
+display_message "Activating SQL authentication"
 sed -i '/^#.*sql$/s/^#//g' /etc/freeradius/sites-available/default
 check_returned_code $?
 
-execute_command "freeradius -C"
-execute_command "service freeradius start"
+execute_command "freeradius -C" true "Checking freeradius configuration"
+execute_command "service freeradius start" true "Starting freeradius service"
 
 display_message "Activating IP forwarding"
 sed -i '/^#net\.ipv4\.ip_forward=1$/s/^#//g' /etc/sysctl.conf
 check_returned_code $?
-execute_command "/etc/init.d/networking restart"
+execute_command "/etc/init.d/networking restart" true "Restarting network service to take IP forwarding into account"
 
-execute_command "apt-get install -y --force-yes git haserl gengetopt devscripts libtool bash-completion autoconf automake"
-execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE"
-execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc"
-execute_command "cd /usr/src && dpkg -i coova-chilli_1.3.0_armhf.deb"
+execute_command "apt-get install -y --force-yes git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake" true "Installing compilation tools"
+execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE" true "Cloning CoovaChilli project"
 
-display_message "Configure Coova up action"
-COMMAND="echo 'iptables -I POSTROUTING -t nat -o \$HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh"
-eval $COMMAND
+nextstep:
+
+execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
+execute_command "cd /usr/src && dpkg -i coova-chilli_1.3.0_armhf.deb" true "Installing CoovaChilli package"
+
+display_message "Configuring CoovaChilli up action"
+echo 'iptables -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
 check_returned_code $?
 
 display_message "Activating CoovaChilli"
-COMMAND="sed 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli > /tmp/chilli"
-eval $COMMAND
-check_returned_code $?
-COMMAND="cp /tmp/chilli /etc/default/chilli"
-eval $COMMAND
+sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
 check_returned_code $?
 
-display_message "Configuring CoovaChilli"
-COMMAND="sed 's/\# HS_WANIF=eth0/HS_WANIF=eth0/g' /etc/chilli/defaults > /tmp/defaults.1"
-eval $COMMAND
+display_message "Configuring CoovaChilli WAN interface"
+sed -i 's/\# HS_WANIF=eth0/HS_WANIF=eth0/g' /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/HS_LANIF=eth1/HS_LANIF=wlan0/g' /tmp/defaults.1 > /tmp/defaults.2"
-eval $COMMAND
+display_message "Configuring CoovaChilli LAN interface"
+sed -i 's/HS_LANIF=eth1/HS_LANIF=wlan0/g' /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/HS_NETWORK=10.1.0.0/HS_NETWORK=$HOTSPOT_NETWORK/g' /tmp/defaults.2 > /tmp/defaults.3"
-eval $COMMAND
+display_message "Configuring CoovaChilli hotspot network"
+sed -i "s/HS_NETWORK=10.1.0.0/HS_NETWORK=$HOTSPOT_NETWORK/g" /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/HS_UAMLISTEN=10.1.0.1/HS_UAMLISTEN=$HOTSPOT_IP/g' /tmp/defaults.3 > /tmp/defaults.4"
-eval $COMMAND
+display_message "Configuring CoovaChilli hotspot IP"
+sed -i "s/HS_UAMLISTEN=10.1.0.1/HS_UAMLISTEN=$HOTSPOT_IP/g" /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g' /tmp/defaults.4 > /tmp/defaults.5"
-eval $COMMAND
+display_message "Configuring CoovaChilli authorized network"
+sed -i "s/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g" /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/HS_UAMSECRET=change-me/HS_UAMSECRET=$COOVACHILLI_SECRETKEY/g' /tmp/defaults.5 > /tmp/defaults.6"
-eval $COMMAND
+display_message "Configuring CoovaChilli secret key"
+sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=$COOVACHILLI_SECRETKEY/g" /etc/chilli/defaults
 check_returned_code $?
 
-COMMAND="sed 's/\# HS_SSID=<ssid>/HS_SSID=$HOTSPOT_NAME/g' /tmp/defaults.6 > /tmp/defaults.7"
-eval $COMMAND
+display_message "Configuring CoovaChilli secret key"
+sed -i "s/\# HS_SSID=<ssid>/HS_SSID=$HOTSPOT_NAME/g" /etc/chilli/defaults
 check_returned_code $?
 
-cp /tmp/defaults.7 /etc/chilli/defaults
-check_returned_code $?
+execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
 
-execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ."
+execute_command "cd /usr/src && wget $HASERL_URL" true "Download Haserl"
 
-execute_command "cd /usr/src && wget $HASERL_URL"
+execute_command "cd /usr/src && tar zxvf $HASERL_ARCHIVE.tar.gz" true "Uncompressing Haserl archive"
 
-execute_command "cd /usr/src && tar zxvf $HASERL_ARCHIVE.tar.gz"
+execute_command "cd /usr/src/$HASERL_ARCHIVE && ./configure && make && make install" true "Compiling and installing Haserl"
 
-execute_command "cd /usr/src/$HASERL_ARCHIVE && ./configure && make && make install"
-
-display_message "Update chilli configuration"
+display_message "Updating chilli configuration"
 sed -i '/haserl=/s/^haserl=.*$/haserl=\/usr\/local\/bin\/haserl/g' /etc/chilli/wwwsh
 check_returned_code $?
 
-execute_command "service chilli start"
+execute_command "service chilli start" true "Starting CoovaChilli service"
 
-execute_command "sleep 3 && ifconfig -a | grep tun0" false
+execute_command "sleep 3 && ifconfig -a | grep tun0" false "Cheching if interface tun0 has been created by CoovaChilli"
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "Unable to find chilli interface tun0"
     exit 1
 fi
 
-execute_command "apt-get install -y --force-yes hostapd"
+execute_command "apt-get install -y --force-yes hostapd" true "Installing hostapd"
 
-display_message "Configure hostapd"
+display_message "Creating configuration file for hostapd"
 echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' >> /etc/default/hostapd
 check_returned_code $?
-
+display_message "Configuring hostapd"
 echo "interface=wlan0
 driver=nl80211
 ssid=$HOTSPOT_NAME
@@ -258,37 +243,38 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-execute_command "service hostapd start"
+execute_command "service hostapd start" true "Starting hostapd service"
 
-execute_command "apt-get install -y --force-yes php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache"
+execute_command "apt-get install -y --force-yes php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache" true "Installing Nginx webserver with PHP support"
 
-execute_command "cd /usr/src && wget $DALORADIUS_ARCHIVE"
+execute_command "cd /usr/src && wget $DALORADIUS_ARCHIVE" true "Downloading daloradius"
 
-execute_command "cd /usr/src && tar zxvf download -C /usr/share/nginx/html/"
+execute_command "cd /usr/src && tar zxvf download -C /usr/share/nginx/html/" true "Uncompressing daloradius archive"
 
-execute_command "mv /usr/share/nginx/html/daloradius-0.9-9 /usr/share/nginx/html/daloradius"
+execute_command "mv /usr/share/nginx/html/daloradius-0.9-9 /usr/share/nginx/html/daloradius" true "Renaming daloradius folder"
 
-display_message "Loading daloradius configuration"
+display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
 check_returned_code $?
 
-display_message "Grant users privileges"
+display_message "Creating users privileges for localhost"
 echo "GRANT ALL ON radius.* to 'radius'@'localhost';" > /tmp/grant.sql
 check_returned_code $?
-echo "GRANT ALL ON radius.* to 'radius'@'127.0.01';" >> /tmp/grant.sql
+display_message "Creating users privileges for 127.0.0.1"
+echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
 check_returned_code $?
-
+display_message "Granting users privileges"
 mysql -u root -p$MYSQL_PASSWORD < /tmp/grant.sql
 check_returned_code $?
 
-display_message "Configuring daloRadius"
-sed "s/\$configValues\['CONFIG_DB_USER'\] = 'root';/\$configValues\['CONFIG_DB_USER'\] = 'radius';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php > /tmp/daloradius.1
+display_message "Configuring daloradius DB user name"
+sed -i "s/\$configValues\['CONFIG_DB_USER'\] = 'root';/\$configValues\['CONFIG_DB_USER'\] = 'radius';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
 check_returned_code $?
-sed "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /tmp/daloradius.1 > /tmp/daloradius.2
+display_message "Configuring daloradius DB user password"
+sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
 check_returned_code $?
-execute_command "cp /tmp/daloradius.2 /usr/share/nginx/html/daloradius/library/daloradius.conf.php"
 
-display_message "Build NGINX configuration"
+display_message "Building NGINX configuration (default listen port : 80)"
 echo '
 server {
        	listen 80 default_server;
@@ -311,13 +297,13 @@ server {
 }' > /etc/nginx/sites-available/default
 check_returned_code $?
 
-execute_command "nginx -t"
+execute_command "nginx -t" true "Checking Nginx configuration file"
 
-execute_command "service nginx restart"
+execute_command "service nginx restart" true "Restarting Nginx"
 
-execute_command "service hostapd restart"
+execute_command "service hostapd restart" true "Restarting hostapd"
 
-display_message "Get IP of the Raspberry Pi"
+display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
 MY_IP=`ifconfig eth0 | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
 
 # Last message to display once installation ended successfully
