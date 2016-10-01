@@ -43,7 +43,7 @@ check_returned_code() {
         display_message ""
         display_message "Something went wrong with the last command. Please check the log file"
         display_message ""
-        exit -1
+        exit 1
     fi
 }
 
