@@ -91,9 +91,9 @@ jumpto() {
 
 prepare_install
 
-jumpto "nextstep"
+#jumpto "nextstep"
 
-nextstep:
+#nextstep:
 
 execute_command "apt-get update" true "Updating system"
 execute_command "apt-get upgrade -y" true "Upgrading all packages"
