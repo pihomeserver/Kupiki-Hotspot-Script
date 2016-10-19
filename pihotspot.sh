@@ -97,6 +97,7 @@ prepare_install
 
 execute_command "apt-get update" true "Updating system"
 execute_command "apt-get upgrade -y" true "Upgrading all packages"
+execute_command "apt-get install -y --force-yes apt-transport-https" true "Adding HTTPS support for apt-get (Raspbian Lite compatiblity)
 
 execute_command "ifconfig -a | grep wlan0" false "Checking if wlan0 interface already exists"
 if [ $COMMAND_RESULT -ne 0 ]; then
