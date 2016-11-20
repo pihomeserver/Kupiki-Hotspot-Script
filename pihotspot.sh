@@ -17,6 +17,10 @@ HOTSPOT_IP="192.168.10.1"
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
 COOVACHILLI_SECRETKEY="change-me" 
+# WAN interface (the one with Internet)
+WAN_INTERFACE="eth0"
+# LAN interface (the one for the hotspot)
+LAN_INTERFACE="wlan0"
 
 # *************************************
 #
@@ -24,10 +28,6 @@ COOVACHILLI_SECRETKEY="change-me"
 #
 # *************************************
 
-# WAN interface (the one with Internet)
-WAN_INTERFACE="eth0"
-# LAN interface (the one for the hotspot)
-LAN_INTERFACE="wlan0"
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Daloradius URL
@@ -99,7 +99,7 @@ execute_command "apt-get update" true "Updating system"
 execute_command "apt-get upgrade -y" true "Upgrading all packages"
 execute_command "apt-get install -y --force-yes apt-transport-https" true "Adding HTTPS support for apt-get (Raspbian Lite compatiblity)"
 
-execute_command "ifconfig -a | grep wlan0" false "Checking if wlan0 interface already exists"
+execute_command "ifconfig -a | grep $LAN_INTERFACE" false "Checking if wlan0 interface already exists"
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "Wifi interface not found. Upgrading the system first"
     execute_command "apt dist-upgrade -y --force-yes" true "Upgrading the distro. Be patient"

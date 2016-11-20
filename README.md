@@ -34,7 +34,7 @@ You just have to download the script, edit it to update it's parameters, execute
 
 - Download the script with the following command   
 ` git clone https://github.com/pihomeserver/Pi-Hotspot.git `
-- Edit the script and update the first lines to define your own configuration
+- Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
 - Execute the script using sudo (or as root but you already may know that it's not recommanded)
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`
