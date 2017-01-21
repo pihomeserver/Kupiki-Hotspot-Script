@@ -41,7 +41,7 @@ You just have to download the script, edit it to update it's parameters, execute
     - ie:
         - lsusb
         - Look for something like, "Ralink Technology, Corp RT2870/RT3070"
-        - sudo apt-get install firmware-ralink
+        - sudo apt-get install firmware-ralink (This is just a example you might have something different, fie: dlink, firmware-dlink)
         - sudo reboot
         
 - Download the script with the following command   
