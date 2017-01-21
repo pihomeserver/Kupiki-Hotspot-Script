@@ -23,7 +23,7 @@ What are the requirements ?
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
-- A micro SD card with a raspbian-like OS installed. For this project i used [minibian](https://minibianpi.wordpress.com/) which optimized
+- A micro SD card with a raspbian-like OS installed. For this project i used [minibian](https://minibianpi.wordpress.com/) which is optimized
 for this project
 - An internet access of course
 
@@ -35,9 +35,16 @@ You just have to download the script, edit it to update it's parameters, execute
 - Download the script with the following command   
 ` git clone https://github.com/pihomeserver/Pi-Hotspot.git `
 - Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
-- Execute the script using sudo (or as root but you already may know that it's not recommanded)
+- Execute the script using the following command :
+` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`
+
+Then
+=====
+Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
+` http://<mypi_ip>/daloradius `
+The exact address will be displayed at the end of the script execution.
 
 Support
 =======
