@@ -32,10 +32,26 @@ Usage
 
 You just have to download the script, edit it to update it's parameters, execute and wait ... If the wifi on the Raspberry is not already configured, don't worry, the script will do it
 
+- Prepair system with these commands:
+    - sudo apt-get update
+    - sudo rpi-update
+    - sudo reboot
+- Install your USB wifi adapters FIRMWARE and DRIVERS
+    - ie:
+        - lsusb
+        - Look for something like, "Ralink Technology, Corp RT2870/RT3070"
+        - sudo apt-get install firmware-ralink
+        - sudo reboot
+        
 - Download the script with the following command   
 ` git clone https://github.com/pihomeserver/Pi-Hotspot.git `
 - Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
 - Execute the script using sudo (or as root but you already may know that it's not recommanded)
+        - You must make script executable and not run with SH for it will ignore shebang and give syntax errors
+        - ie: 
+           - sudo chmod +x pihotspot.sh
+           - sudo ./pihotspot.sh
+           (Running with SH will give syntax errors)
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`
 
