@@ -36,6 +36,7 @@ You just have to download the script, edit it to update it's parameters, execute
     - sudo apt-get update
     - sudo rpi-update
     - sudo reboot
+    
 - Install your USB wifi adapters FIRMWARE and DRIVERS
     - ie:
         - lsusb
