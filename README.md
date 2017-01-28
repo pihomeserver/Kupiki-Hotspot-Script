@@ -23,9 +23,11 @@ What are the requirements ?
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
-- A micro SD card with a raspbian-like OS installed. For this project i used [minibian](https://minibianpi.wordpress.com/) which is optimized
-for this project
 - An internet access of course
+- A micro SD card with a raspbian-like OS installed (recommanded one is [minibian](https://minibianpi.wordpress.com/) )
+   - Supported OS : [minibian](https://minibianpi.wordpress.com/), [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
+
+_WARNING_ : For this project i used [minibian](https://minibianpi.wordpress.com/). No warranty that it will work with OSes like Official Raspbian, Official Raspbian Light, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
@@ -38,7 +40,7 @@ You just have to download the script, edit it to update it's parameters, execute
 - Execute the script using the following command :
 ` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
 
-A log file named `pihotspot.log` will be created in the folder `/var/log`
+A log file named `pihotspot.log` will be created in the folder `/var/log`. Open a new session on the Pi and run the following command `tail -f /var/log/pihotspot.log`
 
 Then
 =====
