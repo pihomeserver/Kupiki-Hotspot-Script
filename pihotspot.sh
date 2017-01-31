@@ -322,66 +322,8 @@ display_message "- Wifi Hotspot available : $HOTSPOT_NAME"
 display_message "- For the user management, please connect to http://$MY_IP/daloradius/"
 display_message "  (login : administrator / password : radius)"
 
-# ********************
-# For squid integration, one day may be
+# Remove current script
+#echo "#!/bin/sh -e" > /etc/rc.local
+#echo "exit 0" >> /etc/rc.local
 
-
-#apt-get install -y squid3
-#cp /etc/squid3/squid.conf /etc/squid3/squid.conf.origin
-#cat /etc/squid3/squid.conf.origin | egrep -v -e '^[[:blank:]]*#|^$' > /etc/squid3/squid.conf
-
-#acl LocalNet src 192.168.1.0/24
-#acl SSL_ports port 443
-#acl Safe_ports port 80          # http
-#acl Safe_ports port 21          # ftp
-#acl Safe_ports port 443         # https
-#acl Safe_ports port 70          # gopher
-#acl Safe_ports port 210         # wais
-#acl Safe_ports port 1025-65535  # unregistered ports
-#acl Safe_ports port 280         # http-mgmt
-#acl Safe_ports port 488         # gss-http
-#acl Safe_ports port 591         # filemaker
-#acl Safe_ports port 777         # multiling http
-#acl CONNECT method CONNECT
-
-#acl bad_url dstdomain "/etc/squid3/bad-sites.acl"
-#http_access deny bad_url
-
-#http_access deny !Safe_ports
-#http_access deny CONNECT !SSL_ports
-#http_access allow localhost manager
-#http_access deny manager
-#http_access allow localhost
-#http_access allow LocalNet
-#http_access deny all
-#http_port 3128 transparent
-#coredump_dir /var/spool/squid3
-#refresh_pattern ^ftp:           1440    20%     10080
-#refresh_pattern ^gopher:        1440    0%      1440
-#refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
-#refresh_pattern .               0       20%     4320
-
-#access_log /var/log/squid3/access.log
-#cache_log /var/log/squid3/cache.log
-#cache_store_log /var/log/squid3/store.log
-
-#$IP_WAN=`ip -o -4 addr list eth0 | awk '{print $4}' | awk -F '/' '{print $1}'`
-
-# iptables -L -vt nat --line-numbers
-# iptables -t nat -D PREROUTING 1
-
-
-#iptables -A INPUT -p tcp -m tcp --dport 3128 --syn -j ACCEPT
-#iptables -t nat -A PREROUTING -i tun0 -p tcp -m tcp --dport 3128 --syn -j DROP
-#iptables -t nat -A PREROUTING -i tun0 -p tcp -m tcp -d 192.168.1.0/24 --dport 80 -j RETURN
-#iptables -t nat -A PREROUTING -i tun0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
-
-
-# /sbin/iptables -A PREROUTING -i tun0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
-# /sbin/iptables -A POSTROUTING -o eth0 -j SNAT --to-source 192.168.1.17
-
-# iptables -t nat -A PREROUTING -i tun0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
-# iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source $IP_WAN
-
-# iptables -A INPUT -i interface -p tcp -d your_bridge_ip -s local-network --dport 3128 -m state --state NEW,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -i tun0 -p tcp -d 192.168.1.17 -o eth0 --dport 3128 -m state --state NEW,ESTABLISHED -j ACCEPT
+exit 0
