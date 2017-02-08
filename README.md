@@ -43,22 +43,15 @@ You just have to download the script, edit it to update it's parameters, execute
 - Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
 - Execute the script using the following command :
 ` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
-<<<<<<< HEAD
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`. Open a new session on the Pi and run the following command `tail -f /var/log/pihotspot.log`
-=======
 
 Then
 =====
 Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
 ` http://<mypi_ip>/daloradius `
 The exact address will be displayed at the end of the script execution.
-
-Then
-=====
-Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
-` http://<mypi_ip>/daloradius `
-The exact address will be displayed at the end of the script execution.
+**Do not try to connect to daloRadius throught your new hotspot network**
 
 Support
 =======
