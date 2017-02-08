@@ -16,7 +16,7 @@ HOTSPOT_IP="192.168.10.1"
 # Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
-COOVACHILLI_SECRETKEY="change-me" 
+COOVACHILLI_SECRETKEY="change-me"
 # WAN interface (the one with Internet)
 WAN_INTERFACE="eth0"
 # LAN interface (the one for the hotspot)
@@ -93,8 +93,11 @@ jumpto() {
 
 prepare_install
 
-#jumpto "nextstep"
+# Use the following instructions to help debug the script and bypass some instructions that have been already executed
+# 1) Uncomment both lines (jumpto and nextstep)
+# 2) Move the line "nextstep:" right before the first instruction that you want to be executed
 
+#jumpto "nextstep"
 #nextstep:
 
 execute_command "apt-get update" true "Updating system"
