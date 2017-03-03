@@ -17,6 +17,8 @@ HOTSPOT_IP="192.168.10.1"
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
 COOVACHILLI_SECRETKEY="change-me"
+# Secret word for FreeRadius
+FREERADIUS_SECRETKEY="testing123"
 # WAN interface (the one with Internet)
 WAN_INTERFACE="eth0"
 # LAN interface (the one for the hotspot)
@@ -153,14 +155,26 @@ display_message "Creating additional tables"
 mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/nas.sql
 check_returned_code $?
 
-display_message "Updating freeradius configuration"
+display_message "Updating freeradius configuration - Activate SQL support"
 sed -i '/^#.*\$INCLUDE sql\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
+check_returned_code $?
+
+display_message "Updating freeradius configuration - Activate SQL counters"
+sed -i '/^#.*\$INCLUDE sql\/mysql\/counter\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
+check_returned_code $?
+
+display_message "Updating freeradius configuration - Activate daily counters"
+sed -i '/^#.*daily$/s/^#//g' /etc/freeradius/radiusd.conf
 check_returned_code $?
 
 execute_command "service freeradius stop" true "Stoping freeradius service to update the configuration"
 
 display_message "Activating SQL authentication"
 sed -i '/^#.*sql$/s/^#//g' /etc/freeradius/sites-available/default
+check_returned_code $?
+
+display_message "Activating CoA site"
+ln -s /etc/freeradius/sites-available/coa /etc/freeradius/sites-enabled/coa
 check_returned_code $?
 
 execute_command "freeradius -C" true "Checking freeradius configuration"
@@ -213,6 +227,10 @@ display_message "Configuring CoovaChilli hotspot SSID"
 sed -i "s/\# HS_SSID=<ssid>/HS_SSID=$HOTSPOT_NAME/g" /etc/chilli/defaults
 check_returned_code $?
 
+display_message "Add CoA support"
+sed -i '20iHS_COAPORT=3799' /etc/chilli/defaults
+check_returned_code $?
+
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
 
 execute_command "cd /usr/src && wget $HASERL_URL" true "Download Haserl"
@@ -227,7 +245,7 @@ check_returned_code $?
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
 
-execute_command "sleep 3 && ifconfig -a | grep tun0" false "Cheching if interface tun0 has been created by CoovaChilli"
+execute_command "sleep 3 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "Unable to find chilli interface tun0"
     exit 1
