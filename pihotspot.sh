@@ -173,9 +173,9 @@ display_message "Activating SQL authentication"
 sed -i '/^#.*sql$/s/^#//g' /etc/freeradius/sites-available/default
 check_returned_code $?
 
-display_message "Activating CoA site"
-ln -s /etc/freeradius/sites-available/coa /etc/freeradius/sites-enabled/coa
-check_returned_code $?
+#display_message "Activating CoA site"
+#ln -s /etc/freeradius/sites-available/coa /etc/freeradius/sites-enabled/coa
+#check_returned_code $?
 
 execute_command "freeradius -C" true "Checking freeradius configuration"
 execute_command "service freeradius start" true "Starting freeradius service"
