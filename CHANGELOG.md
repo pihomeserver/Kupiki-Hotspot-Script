@@ -1,3 +1,6 @@
+**v0.6**
+- Add daily counters. Used to add checks for prepaid accounts
+
 **v0.5**
 - Add CoA support in Coova to allow users to be disconnected
 - Create changelog
