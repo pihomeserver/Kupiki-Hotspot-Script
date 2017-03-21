@@ -280,6 +280,19 @@ execute_command "cd /usr/src && tar zxvf download -C /usr/share/nginx/html/" tru
 
 execute_command "mv /usr/share/nginx/html/daloradius-0.9-9 /usr/share/nginx/html/daloradius" true "Renaming daloradius folder"
 
+execute_command "service freeradius stop" true "Stopping freeradius service"
+
+execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf" 
+#below is needed because counter.conf contains duplicate entry "sqlcounter noresetcounter", this will remove the first one.
+sed -i "110,117d" /etc/freeradius/sql/mysql/counter.conf
+check_returned_code $?
+
+execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default" 
+
+execute_command "mv /etc/freeradius/modules/sql.conf /etc/freeradius/modules/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/modules/sql.conf" true "Updating /etc/freeradius/modules/sql.conf" 
+
+execute_command "service freeradius start" true "Starting freeradius service"
+
 display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
 check_returned_code $?
