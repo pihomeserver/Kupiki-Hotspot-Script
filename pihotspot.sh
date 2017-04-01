@@ -8,7 +8,7 @@ LOGNAME="pihotspot.log"
 # be sure to add a / at the end of the path
 LOGPATH="/var/log/"
 # Password for user root (MySql not system)
-MYSQL_PASSWORD="pihotspot"
+MYSQL_PASSWORD="5a7sKncNxc"
 # Name of the hotspot that will be visible for users/customers
 HOTSPOT_NAME="pihotspot"
 # IP of the hotspot
@@ -16,9 +16,11 @@ HOTSPOT_IP="192.168.10.1"
 # Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
-COOVACHILLI_SECRETKEY="change-me"
+COOVACHILLI_SECRETKEY="xBNRQLBUxe"
+# Password for radius database
+RADIUS_PASSWORD="8HXGwfUxYD"
 # Secret word for FreeRadius
-FREERADIUS_SECRETKEY="testing123"
+FREERADIUS_SECRETKEY="sa8dtUkgp8"
 # WAN interface (the one with Internet)
 WAN_INTERFACE="eth0"
 # LAN interface (the one for the hotspot)
@@ -145,6 +147,10 @@ check_returned_code $?
 
 display_message "Installing freeradius schema"
 mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/schema.sql
+check_returned_code $?
+
+display_message "Update radius database password in user creation"
+sed -i 's/radpass/$RADIUS_PASSWORD/g' /etc/freeradius/sql/mysql/admin.sql
 check_returned_code $?
 
 display_message "Creating administrator privileges"
@@ -282,14 +288,18 @@ execute_command "mv /usr/share/nginx/html/daloradius-0.9-9 /usr/share/nginx/html
 
 execute_command "service freeradius stop" true "Stopping freeradius service"
 
-execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf" 
+execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
 #below is needed because counter.conf contains duplicate entry "sqlcounter noresetcounter", this will remove the first one.
 sed -i "110,117d" /etc/freeradius/sql/mysql/counter.conf
 check_returned_code $?
 
-execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default" 
+execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default"
 
-execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/sql.conf" 
+execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/sql.conf"
+
+display_message "Update radius database password in /etc/freeradius/sql.conf"
+sed -i 's/radpass/$RADIUS_PASSWORD/g' /etc/freeradius/sql.conf
+check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"
 
@@ -311,7 +321,7 @@ display_message "Configuring daloradius DB user name"
 sed -i "s/\$configValues\['CONFIG_DB_USER'\] = 'root';/\$configValues\['CONFIG_DB_USER'\] = 'radius';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
 check_returned_code $?
 display_message "Configuring daloradius DB user password"
-sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = '$RADIUS_PASSWORD';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
 check_returned_code $?
 
 display_message "Building NGINX configuration (default listen port : 80)"
