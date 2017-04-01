@@ -150,7 +150,7 @@ mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/schema.sql
 check_returned_code $?
 
 display_message "Update radius database password in user creation"
-sed -i 's/radpass/$RADIUS_PASSWORD/g' /etc/freeradius/sql/mysql/admin.sql
+sed -i "s/radpass/$RADIUS_PASSWORD/g" /etc/freeradius/sql/mysql/admin.sql
 check_returned_code $?
 
 display_message "Creating administrator privileges"
@@ -298,7 +298,7 @@ execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/site
 execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/sql.conf"
 
 display_message "Update radius database password in /etc/freeradius/sql.conf"
-sed -i 's/radpass/$RADIUS_PASSWORD/g' /etc/freeradius/sql.conf
+sed -i "s/radpass/$RADIUS_PASSWORD/g" /etc/freeradius/sql.conf
 check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"
