@@ -86,6 +86,9 @@ prepare_logfile() {
 prepare_install() {
     # Prepare the log file
     prepare_logfile
+    
+    # Force IPv4 on APT resources
+    execute_command "echo 'Acquire::ForceIPv4 \"true\";' | sudo tee /etc/apt/apt.conf.d/99force-ipv4" true "Updating APT config to force IPv4"
 }
 
 jumpto() {
