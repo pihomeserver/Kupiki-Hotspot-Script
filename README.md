@@ -19,7 +19,7 @@ Once the script is executed, you will get :
 Requirements
 ============
 
-What are the requirements ?
+What are the requirements ? 
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
