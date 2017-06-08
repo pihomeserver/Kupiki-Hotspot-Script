@@ -13,7 +13,7 @@ implement because of too many steps. That's why i decided to create a script tha
 Once the script is executed, you will get :
 - A Wifi hotspot using the integrated wifi chipset
 - A captive portal based on coovachilli
-- An authenticate control based on freeRadius
+- An authentication process based on freeRadius
 - An interface for freeRadius based on daloRadius
 
 Requirements
@@ -23,15 +23,15 @@ What are the requirements ?
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
-
-=======
 - A micro SD card with a raspbian-like OS installed. For this project i used [minibian](https://minibianpi.wordpress.com/) which is optimized
 for this project
 - An internet access of course
-- A micro SD card with a raspbian-like OS installed (recommanded one is [minibian](https://minibianpi.wordpress.com/) )
-   - Supported OS : [minibian](https://minibianpi.wordpress.com/), [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
+- A micro SD card with a raspbian-like OS installed (recommanded one is [minibian](https://minibianpi.wordpress.com/) ). Supported OS are 
+  - [minibian](https://minibianpi.wordpress.com/)
+  - [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
+  - [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/)
 
-_WARNING_ : For this project i used [minibian](https://minibianpi.wordpress.com/). No warranty that it will work with OSes like Official Raspbian, Official Raspbian Light, Ubuntu Mate Xenial, etc.
+_WARNING_ : For this project i used [minibian](https://minibianpi.wordpress.com/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
