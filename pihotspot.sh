@@ -35,7 +35,7 @@ LAN_WIFI_DRIVER="nl80211"
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Daloradius URL
-DALORADIUS_ARCHIVE="https://sourceforge.net/projects/daloradius/files/latest/download"
+DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
 # Haserl URL
 HASERL_URL="http://downloads.sourceforge.net/project/haserl/haserl-devel/haserl-0.9.35.tar.gz"
 # Haserl archive name based on the URL (keep the same version)
@@ -205,7 +205,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake hostapd php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake hostapd php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
   declare -a argArray1=("${!1}")
@@ -325,7 +325,7 @@ sed -i '/^#net\.ipv4\.ip_forward=1$/s/^#//g' /etc/sysctl.conf
 check_returned_code $?
 execute_command "/etc/init.d/networking restart" true "Restarting network service to take IP forwarding into account"
 
-execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE" true "Cloning CoovaChilli project"
+execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
 execute_command "cd /usr/src && dpkg -i coova-chilli_1.3.0_armhf.deb" true "Installing CoovaChilli package"
@@ -409,11 +409,7 @@ check_returned_code $?
 
 execute_command "service hostapd start" true "Starting hostapd service"
 
-execute_command "cd /usr/src && wget $DALORADIUS_ARCHIVE" true "Downloading daloradius"
-
-execute_command "cd /usr/src && tar zxvf download -C /usr/share/nginx/html/" true "Uncompressing daloradius archive"
-
-execute_command "mv /usr/share/nginx/html/daloradius-0.9-9 /usr/share/nginx/html/daloradius" true "Renaming daloradius folder"
+execute_command "cd /usr/share/nginx/html/ && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
 
 display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
@@ -462,10 +458,6 @@ check_returned_code $?
 execute_command "nginx -t" true "Checking Nginx configuration file"
 
 execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
-
-display_message "Remove duplicate entry 'sqlcounter noresetcounter'"
-sed -i "110,117d" /etc/freeradius/sql/mysql/counter.conf
-check_returned_code $?
 
 execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default"
 

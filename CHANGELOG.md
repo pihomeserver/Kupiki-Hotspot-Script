@@ -1,3 +1,7 @@
+**v0.9.1**
+- Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
+- Remove double installation request for git
+
 **v0.9**
 - Update the interface
 - Optimisations
