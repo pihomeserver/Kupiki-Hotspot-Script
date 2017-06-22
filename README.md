@@ -1,8 +1,3 @@
-
-**If you want something easier than a script, look at the dedicated distro that will build an up-to-date wifi hotspot. 
-Look at [this repository](https://github.com/pihomeserver/Kupiki-Hotspot)**
-
-
 What is Pi Hotspot
 ==================
 
