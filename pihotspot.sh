@@ -291,6 +291,8 @@ execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
 
 display_message "Creating freeradius database"
 echo 'drop database if exists radius;' | mysql -u root -p$MYSQL_PASSWORD
+echo "GRANT USAGE ON *.* TO 'radius'@'localhost';" | mysql -u root -p$MYSQL_PASSWORD
+echo "DROP USER 'radius'@'localhost';" | mysql -u root -p$MYSQL_PASSWORD
 echo 'create database radius;' | mysql -u root -p$MYSQL_PASSWORD
 check_returned_code $?
 
@@ -325,10 +327,15 @@ sed -i '/^#net\.ipv4\.ip_forward=1$/s/^#//g' /etc/sysctl.conf
 check_returned_code $?
 execute_command "/etc/init.d/networking restart" true "Restarting network service to take IP forwarding into account"
 
+execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previous sources of CoovaChilli project"
+
 execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
+# Temporary solution for TCP_NODELAY error
+#execute_command "cd /usr/src/coova-chilli/src && rm -f net.c && wget https://raw.githubusercontent.com/gbaligh/coova-chilli/TCP_NODELAY/src/net.c" true "Temporary fix for TCP_NODELAY"
+
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
-execute_command "cd /usr/src && dpkg -i coova-chilli_1.3.0_armhf.deb" true "Installing CoovaChilli package"
+execute_command "cd /usr/src && dpkg -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
 echo 'iptables -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
