@@ -500,9 +500,5 @@ display_message "- Wifi Hotspot available : $HOTSPOT_NAME"
 display_message "- For the user management, please connect to http://$MY_IP/daloradius/"
 display_message "  (login : administrator / password : radius)"
 
-# Remove current script
-#echo "#!/bin/sh -e" > /etc/rc.local
-#echo "exit 0" >> /etc/rc.local
-
 exit 0
 
