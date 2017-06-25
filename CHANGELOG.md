@@ -1,5 +1,9 @@
+**v0.9.2**
+- Replace call of _iptables_ by _ipt_ in _up.sh_
+- Bug fix #32 / #30 : block WAN access from LAN
+
 **v0.9.1**
-- Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
+- Request #38 : Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
 - Remove double installation request for git
 
 **v0.9**

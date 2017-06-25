@@ -338,8 +338,18 @@ execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Bu
 execute_command "cd /usr/src && dpkg -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
-echo 'iptables -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
+echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
 check_returned_code $?
+
+display_message "Block access from LAN to WAN"
+cat >> /etc/chilli/up.sh << EOF
+LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
+ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+if [ \$? -ne 0 ]
+then
+    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+fi
+EOF
 
 display_message "Activating CoovaChilli"
 sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
