@@ -1,4 +1,4 @@
-What is Pi Hotspot
+What is Kupiki Hotspot
 ==================
 
 This project is the latest version of [the tutorial](http://www.pihomeserver.fr/2015/08/05/raspberry-pi-coovachilli-et-freeradius-pour-un-hotspot-wifi-avec-portail-captif/) created first on my blog [Pi Home Server](http://www.pihomeserver.fr)
@@ -18,15 +18,13 @@ What are the requirements ?
 - A Raspberry Pi 3
 - An ethernet cable
 - A power supply for the Raspberry Pi
-- A micro SD card with a raspbian-like OS installed. For this project i used [minibian](https://minibianpi.wordpress.com/) which is optimized
-for this project
 - An internet access of course
-- A micro SD card with a raspbian-like OS installed (recommanded one is [minibian](https://minibianpi.wordpress.com/) ). Supported OS are 
+- A micro SD card with a raspbian-like OS installed (recommanded one is [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/) ). Supported OS are 
   - [minibian](https://minibianpi.wordpress.com/)
   - [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
   - [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/)
 
-_WARNING_ : For this project i used [minibian](https://minibianpi.wordpress.com/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
+_WARNING_ : For this project i used [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
@@ -46,6 +44,7 @@ Then
 Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
 ` http://<mypi_ip>/daloradius `
 The exact address will be displayed at the end of the script execution.
+
 **Do not try to connect to daloRadius throught your new hotspot network**
 
 Support
