@@ -1,3 +1,7 @@
+**v1.0**
+- Implement a new customizable captive portal (HTML / JS / CSS-
+- Bug fix #7 / #28 / #29 : customize captive portal
+
 **v0.9.2**
 - Replace call of _iptables_ by _ipt_ in _up.sh_
 - Bug fix #32 / #30 : block WAN access from LAN 
