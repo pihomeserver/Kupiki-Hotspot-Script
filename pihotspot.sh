@@ -32,7 +32,7 @@ LAN_WIFI_DRIVER="nl80211"
 #
 # *************************************
 
-# CoovaChilli GIT URL
+# CoovaChilli GIT URL 
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Captive Portal URL
 HOTSPOTPORTAL_ARCHIVE="https://github.com/pihomeserver/Kupiki-Hotspot-Portal.git"
