@@ -34,7 +34,7 @@ Usage
 You just have to download the script, edit it to update it's parameters, execute and wait ... If the wifi on the Raspberry is not already configured, don't worry, the script will do it
 
 - Download the script with the following command   
-` git clone https://github.com/pihomeserver/Pi-Hotspot.git `
+` git clone https://github.com/pihomeserver/Kupiki-Hotspot-Script.git`
 - Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
 - Execute the script using the following command :
 ` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
