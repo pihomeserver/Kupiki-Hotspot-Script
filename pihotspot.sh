@@ -34,6 +34,8 @@ LAN_WIFI_DRIVER="nl80211"
 
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
+# Captive Portal URL
+HOTSPOTPORTAL_ARCHIVE="https://github.com/pihomeserver/Kupiki-Hotspot-Portal.git"
 # Daloradius URL
 DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
 # Haserl URL
@@ -265,6 +267,9 @@ fi
 execute_command "echo 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password"
 execute_command "echo 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password (confirmation)"
 
+display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
+MY_IP=`ifconfig $WAN_INTERFACE | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
+
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
 notify_package_updates_available
@@ -331,9 +336,6 @@ execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previou
 
 execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
-# Temporary solution for TCP_NODELAY error
-#execute_command "cd /usr/src/coova-chilli/src && rm -f net.c && wget https://raw.githubusercontent.com/gbaligh/coova-chilli/TCP_NODELAY/src/net.c" true "Temporary fix for TCP_NODELAY"
-
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
 execute_command "cd /usr/src && dpkg -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
@@ -341,12 +343,13 @@ display_message "Configuring CoovaChilli up action"
 echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
 check_returned_code $?
 
-display_message "Block access from LAN to WAN"
+display_message "Block access from LAN to WAN except portal"
 cat >> /etc/chilli/up.sh << EOF
 LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
 ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 if [ \$? -ne 0 ]
 then
+    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport 9000 -j ACCEPT
     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 fi
 EOF
@@ -375,8 +378,17 @@ display_message "Configuring CoovaChilli authorized network"
 sed -i "s/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g" /etc/chilli/defaults
 check_returned_code $?
 
-display_message "Configuring CoovaChilli secret key"
-sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=$COOVACHILLI_SECRETKEY/g" /etc/chilli/defaults
+display_message "Removing CoovaChilli secret key"
+#sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=$COOVACHILLI_SECRETKEY/g" /etc/chilli/defaults
+sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=/g" /etc/chilli/defaults
+check_returned_code $?
+
+display_message "Updating UAMFORMAT"
+sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=http:\/\/$MY_IP:9000/g" /etc/chilli/defaults
+check_returned_code $?
+
+display_message "Updating UAMHOMEPAGE"
+sed -i 's/^HS_UAMHOMEPAGE=.*$/HS_UAMHOMEPAGE=$HS_UAMFORMAT/g' /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Configuring CoovaChilli hotspot SSID"
@@ -472,6 +484,37 @@ server {
 }' > /etc/nginx/sites-available/default
 check_returned_code $?
 
+display_message "Building NGINX configuration for the portal (default listen port : 9000)"
+echo '
+server {
+       	listen 9000 default_server;
+       	listen [::]:9000 default_server;
+
+       	root /usr/share/nginx/portal;
+
+       	index index.html;
+
+       	server_name _;
+
+       	location / {
+       		try_files $uri $uri/ =404;
+       	}
+
+       	location ~ \.php$ {
+       		include snippets/fastcgi-php.conf;
+       		fastcgi_pass unix:/var/run/php5-fpm.sock;
+       	}
+}' > /etc/nginx/sites-available/portal
+check_returned_code $?
+
+execute_command "ln -s /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
+
+execute_command "cd /usr/share/nginx && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+
+display_message "Updating Captive Portal file"
+sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/index.html
+check_returned_code $?
+
 execute_command "nginx -t" true "Checking Nginx configuration file"
 
 execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
@@ -487,9 +530,6 @@ execute_command "service nginx restart" true "Restarting Nginx"
 
 execute_command "service hostapd restart" true "Restarting hostapd"
 
-display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
-MY_IP=`ifconfig $WAN_INTERFACE | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
-
 # Last message to display once installation ended successfully
 
 display_message ""
@@ -501,4 +541,3 @@ display_message "- For the user management, please connect to http://$MY_IP/dalo
 display_message "  (login : administrator / password : radius)"
 
 exit 0
-
