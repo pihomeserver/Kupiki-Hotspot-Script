@@ -47,6 +47,17 @@ The exact address will be displayed at the end of the script execution.
 
 **Do not try to connect to daloRadius throught your new hotspot network**
 
+Screenshots
+=======
+
+<h4 align="center">Connexion screen</h4>
+<img src="http://www.pihomeserver.fr/hosting/portalConnect.png">
+<h4 align="center">Successful connexion</h4>
+<img src="http://www.pihomeserver.fr/hosting/portalConnected.png">
+<h4 align="center">Daloradius</h4>
+<img src="http://www.pihomeserver.fr/hosting/daloradius.png">
+
+
 Support
 =======
 
