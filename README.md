@@ -7,9 +7,13 @@ implement because of too many steps. That's why i decided to create a script tha
 
 Once the script is executed, you will get :
 - A Wifi hotspot using the integrated wifi chipset
-- A captive portal based on coovachilli
+- A custom captive portal based on coovachilli
+    - The portal is served by the high performance web server Nginx
+    - The design of the portal can be easily modified for anyone who has knowledge in HTML and Javascript    
 - An authentication process based on freeRadius
-- An interface for freeRadius based on daloRadius
+- An interface for freeRadius management
+    - daloRadius is installed by default, served by Nginx web server
+    - A full management of the hotspot, with batch for user creation, vouchers, NAS, etc.
 
 Requirements
 ============
@@ -19,7 +23,7 @@ What are the requirements ?
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
-- A micro SD card with a raspbian-like OS installed (recommanded one is [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/) ). Supported OS are 
+- A micro SD card with a raspbian-like OS installed (recommanded one is the official [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/) ). Supported OS are 
   - [minibian](https://minibianpi.wordpress.com/)
   - [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
   - [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/)
