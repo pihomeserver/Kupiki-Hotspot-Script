@@ -1,4 +1,5 @@
 **v1.1**
+- Create a ready-to-use image
 - Add instructions to clear installation if the script is executed more than one time 
 - Bug #41 : use LAN ip for web portal to avoid DHCP issues
 

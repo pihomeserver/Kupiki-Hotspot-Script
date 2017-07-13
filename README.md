@@ -43,6 +43,11 @@ You just have to download the script, edit it to update it's parameters, execute
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`. Open a new session on the Pi and run the following command `tail -f /var/log/pihotspot.log`
 
+Full distro
+====
+
+If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
+
 Then
 =====
 Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
