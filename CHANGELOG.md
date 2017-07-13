@@ -1,5 +1,9 @@
+**v1.1**
+- Add instructions to clear installation if the script is executed more than one time 
+- Bug #41 : use LAN ip for web portal to avoid DHCP issues
+
 **v1.0**
-- Implement a new customizable captive portal (HTML / JS / CSS-
+- Implement a new customizable captive portal (HTML / JS / CSS)
 - Bug fix #7 / #28 / #29 : customize captive portal
 
 **v0.9.2**

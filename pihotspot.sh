@@ -13,6 +13,8 @@ MYSQL_PASSWORD="pihotspot"
 HOTSPOT_NAME="pihotspot"
 # IP of the hotspot
 HOTSPOT_IP="192.168.10.1"
+# Default Portal port
+HOTSPOT_PORT="9000"
 # Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
@@ -264,6 +266,10 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     exit 1
 fi
 
+execute_command "dpkg --purge coova-chilli" true "Remove old configuration of Coova Chilli"
+execute_command "dpkg --purge haserl" true "Remove old configuration of haserl"
+execute_command "dpkg --purge hostapd" true "Remove old configuration of hostapd"
+
 execute_command "echo 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password"
 execute_command "echo 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password (confirmation)"
 
@@ -349,7 +355,7 @@ LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | g
 ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 if [ \$? -ne 0 ]
 then
-    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport 9000 -j ACCEPT
+    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 fi
 EOF
@@ -357,6 +363,8 @@ EOF
 display_message "Activating CoovaChilli"
 sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
 check_returned_code $?
+
+execute_command "cp -f /etc/chilli/defaults /etc/chilli/defaults.backup" true "Backup of default configuration file"
 
 display_message "Configuring CoovaChilli WAN interface"
 sed -i "s/\# HS_WANIF=eth0/HS_WANIF=$WAN_INTERFACE/g" /etc/chilli/defaults
@@ -384,7 +392,7 @@ sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Updating UAMFORMAT"
-sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=http:\/\/$MY_IP:9000/g" /etc/chilli/defaults
+sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=http:\/\/$HOTSPOT_IP:$HOTSPOT_PORT/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Updating UAMHOMEPAGE"
@@ -397,6 +405,10 @@ check_returned_code $?
 
 display_message "Add CoA support"
 sed -i '20iHS_COAPORT=3799' /etc/chilli/defaults
+check_returned_code $?
+
+display_message "Add firewall allowed port"
+sed -i '150iHS_TCP_PORTS="9000"' /etc/chilli/defaults
 check_returned_code $?
 
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
@@ -438,7 +450,7 @@ check_returned_code $?
 
 execute_command "service hostapd start" true "Starting hostapd service"
 
-execute_command "cd /usr/share/nginx/html/ && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
+execute_command "cd /usr/share/nginx/html/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
 
 display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
@@ -484,11 +496,10 @@ server {
 }' > /etc/nginx/sites-available/default
 check_returned_code $?
 
-display_message "Building NGINX configuration for the portal (default listen port : 9000)"
-echo '
+display_message "Building NGINX configuration for the portal (default listen port : $HOTSPOT_PORT)"
+echo "
 server {
-       	listen 9000 default_server;
-       	listen [::]:9000 default_server;
+       	listen $HOTSPOT_IP:$HOTSPOT_PORT default_server;
 
        	root /usr/share/nginx/portal;
 
@@ -497,22 +508,22 @@ server {
        	server_name _;
 
        	location / {
-       		try_files $uri $uri/ =404;
+       		try_files \$uri \$uri/ =404;
        	}
 
-       	location ~ \.php$ {
+       	location ~ \.php\$ {
        		include snippets/fastcgi-php.conf;
        		fastcgi_pass unix:/var/run/php5-fpm.sock;
        	}
-}' > /etc/nginx/sites-available/portal
+}" > /etc/nginx/sites-available/portal
 check_returned_code $?
 
-execute_command "ln -s /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
+execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
 
-execute_command "cd /usr/share/nginx && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+execute_command "cd /usr/share/nginx && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
 
 display_message "Updating Captive Portal file"
-sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/index.html
+sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/portal.js
 check_returned_code $?
 
 execute_command "nginx -t" true "Checking Nginx configuration file"
