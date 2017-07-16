@@ -51,7 +51,7 @@ If you don't want to install the script yourself, you can download a ready-to-us
 Then
 =====
 Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
-` http://<mypi_ip>/daloradius `
+` http://<mypi_ip>/daloradius ` or ` http://<my_hotspot_name>.local/daloradius ` if your system supports Bonjour.
 The exact address will be displayed at the end of the script execution.
 
 **Do not try to connect to daloRadius throught your new hotspot network**

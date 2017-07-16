@@ -1,3 +1,7 @@
+**v1.2**
+- Improvement #40 : you can now connect to daloradius using Bonjour
+- Improvement #47 : Haserl 0.9.35 is no more needed but you can still install it by setting HASERL_INSTALL to Y in the script
+
 **v1.1**
 - Create a ready-to-use image
 - Add instructions to clear installation if the script is executed more than one time 
@@ -40,7 +44,7 @@
 **v0.5**
 - Add CoA support in Coova to allow users to be disconnected
 - Create changelog
-- Few bugs fixes
+- Bug fixing
 
 **v0.4**
 - Improve README content

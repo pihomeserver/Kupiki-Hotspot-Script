@@ -27,6 +27,9 @@ WAN_INTERFACE="eth0"
 LAN_INTERFACE="wlan0"
 # Wifi driver
 LAN_WIFI_DRIVER="nl80211"
+# Install Haserl (required if you want to use the default Coova Portal)
+# Will be installed only if HASERL_INSTALL is set to Y
+HASERL_INSTALL="N"
 
 # *************************************
 #
@@ -209,7 +212,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake hostapd php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev haserl gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils avahi-daemon libavahi-client-dev git libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake hostapd php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
   declare -a argArray1=("${!1}")
@@ -236,6 +239,10 @@ update_package_cache
 notify_package_updates_available
 
 install_dependent_packages PIHOTSPOT_DEPS_START[@]
+
+execute_command "dpkg --purge --force-all coova-chilli" true "Remove old configuration of Coova Chilli"
+execute_command "dpkg --purge --force-all haserl" true "Remove old configuration of haserl"
+execute_command "dpkg --purge --force-all hostapd" true "Remove old configuration of hostapd"
 
 execute_command "/sbin/lsmod | grep tun" false "Checking for tun module"
 if [ $COMMAND_RESULT -ne 0 ]; then
@@ -266,9 +273,9 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     exit 1
 fi
 
-execute_command "dpkg --purge coova-chilli" true "Remove old configuration of Coova Chilli"
-execute_command "dpkg --purge haserl" true "Remove old configuration of haserl"
-execute_command "dpkg --purge hostapd" true "Remove old configuration of hostapd"
+display_message "Updating the system hostname"
+echo $HOTSPOT_NAME > /etc/hostname
+check_returned_code $?
 
 execute_command "echo 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password"
 execute_command "echo 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password (confirmation)"
@@ -343,7 +350,7 @@ execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previou
 execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
-execute_command "cd /usr/src && dpkg -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
+execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
 echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
@@ -413,15 +420,19 @@ check_returned_code $?
 
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
 
-execute_command "cd /usr/src && wget $HASERL_URL" true "Download Haserl"
+if [ $HASERL_INSTALL = "Y" ]; then
 
-execute_command "cd /usr/src && tar zxvf $HASERL_ARCHIVE.tar.gz" true "Uncompressing Haserl archive"
+    execute_command "cd /usr/src && wget $HASERL_URL" true "Download Haserl"
 
-execute_command "cd /usr/src/$HASERL_ARCHIVE && ./configure && make && make install" true "Compiling and installing Haserl"
+    execute_command "cd /usr/src && tar zxvf $HASERL_ARCHIVE.tar.gz" true "Uncompressing Haserl archive"
 
-display_message "Updating chilli configuration"
-sed -i '/haserl=/s/^haserl=.*$/haserl=\/usr\/local\/bin\/haserl/g' /etc/chilli/wwwsh
-check_returned_code $?
+    execute_command "cd /usr/src/$HASERL_ARCHIVE && ./configure && make && make install" true "Compiling and installing Haserl"
+
+    display_message "Updating chilli configuration"
+    sed -i '/haserl=/s/^haserl=.*$/haserl=\/usr\/local\/bin\/haserl/g' /etc/chilli/wwwsh
+    check_returned_code $?
+
+fi
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
 
@@ -548,7 +559,7 @@ display_message ""
 display_message "Congratulation ! You now have your hotspot ready !"
 display_message ""
 display_message "- Wifi Hotspot available : $HOTSPOT_NAME"
-display_message "- For the user management, please connect to http://$MY_IP/daloradius/"
+display_message "- For the user management, please connect to http://$MY_IP/daloradius/ or http://$HOTSPOT_NAME.local/daloradius/"
 display_message "  (login : administrator / password : radius)"
 
 exit 0
