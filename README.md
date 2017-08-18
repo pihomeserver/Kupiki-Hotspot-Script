@@ -47,6 +47,7 @@ Full distro
 ====
 
 If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
+
 Credentials are user : pi / password : pihotspot
 
 Then
