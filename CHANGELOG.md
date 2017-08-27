@@ -1,3 +1,16 @@
+**v1.4**
+- Now check that Debian 9+ is used
+- Use MariaDB instead of MySql (based on default packages of Debian Stretch)
+- Use of Freeradius 3.0.12 (default package from Debian)
+- Make Avahi optional (default is to install it)
+- Make HTTPS for the web portal optional (default is not to install)
+- Bug #50 : crash was due to the use of Debian Stretch 9
+- Bug #54 : crash of the script in case the Chilli service is already running
+- Bug #55 : wrong firewall port in Coova
+
+**v1.3**
+- Improvement #44 : expose front web portal in HTTPS using self signed certificate
+
 **v1.2**
 - Improvement #40 : you can now connect to daloradius using Bonjour
 - Improvement #47 : Haserl 0.9.35 is no more needed but you can still install it by setting HASERL_INSTALL to Y in the script

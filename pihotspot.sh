@@ -7,29 +7,37 @@ LOGNAME="pihotspot.log"
 # Path where the logfile will be stored
 # be sure to add a / at the end of the path
 LOGPATH="/var/log/"
-# Password for user root (MySql not system)
+# Password for user root (MySql/MariaDB not system)
 MYSQL_PASSWORD="pihotspot"
 # Name of the hotspot that will be visible for users/customers
 HOTSPOT_NAME="pihotspot"
 # IP of the hotspot
 HOTSPOT_IP="192.168.10.1"
-# Default Portal port
-HOTSPOT_PORT="9000"
+# Use HTTPS to connect to web portal
+# Set value to Y or N
+HOTSPOT_HTTPS="N"
 # Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
 # Secret word for CoovaChilli
 COOVACHILLI_SECRETKEY="change-me"
 # Secret word for FreeRadius
 FREERADIUS_SECRETKEY="testing123"
-# WAN interface (the one with Internet)
-WAN_INTERFACE="eth0"
+# WAN interface (the one with Internet - default 'eth0' or long name for Debian 9+)
+WAN_INTERFACE=`ip link show | grep '^[1-9]' | awk -F ':' '{print $2}' | awk '{$1=$1};1' | grep '^e'`
 # LAN interface (the one for the hotspot)
 LAN_INTERFACE="wlan0"
 # Wifi driver
 LAN_WIFI_DRIVER="nl80211"
 # Install Haserl (required if you want to use the default Coova Portal)
-# Will be installed only if HASERL_INSTALL is set to Y
+# Set value to Y or N
 HASERL_INSTALL="N"
+# Password used for the generation of the certificate
+CERT_PASSWORD="pihotspot"
+# Number of days to certify the certificate for (default 2 years)
+CERT_DAYS="730"
+# Make Avahi optional
+# Set value to Y or N
+AVAHI_INSTALL="Y"
 
 # *************************************
 #
@@ -37,7 +45,18 @@ HASERL_INSTALL="N"
 #
 # *************************************
 
-# CoovaChilli GIT URL 
+# Default Portal port
+HOTSPOT_PORT="80"
+HOTSPOT_PROTOCOL="http:\/\/"
+# If we need HTTPS support, change port and protocol
+if [ $HOTSPOT_HTTPS = "Y" ]; then
+    HOTSPOT_PORT="443"
+    HOTSPOT_PROTOCOL="https:\/\/"
+fi
+
+# Default version of MariaDB
+MARIADB_VERSION='10.1'
+# CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Captive Portal URL
 HOTSPOTPORTAL_ARCHIVE="https://github.com/pihomeserver/Kupiki-Hotspot-Portal.git"
@@ -133,14 +152,14 @@ jumpto() {
 
 verifyFreeDiskSpace() {
     # Needed free space
-    local required_free_kilobytes=500000
+    local required_free_megabytes=500
     # If user installs unattended-upgrades we will check for 500MB free
     echo ":::"
-    echo -n "::: Verifying free disk space ($required_free_kilobytes Kb)"
-    local existing_free_kilobytes=$(df -Pk | grep -m1 '\/$' | awk '{print $4}')
+    echo -n "::: Verifying free disk space ($required_free_megabytes Kb)"
+    local existing_free_megabytes=$(df -Pk | grep -m1 '\/$' | awk '{print $4}')
 
     # - Unknown free disk space , not a integer
-    if ! [[ "${existing_free_kilobytes}" =~ ^([0-9])+$ ]]; then
+    if ! [[ "${existing_free_megabytes}" =~ ^([0-9])+$ ]]; then
         echo ""
         echo "::: Unknown free disk space!"
         echo "::: We were unable to determine available free disk space on this system."
@@ -155,16 +174,16 @@ verifyFreeDiskSpace() {
                 ;;
         esac
     # - Insufficient free disk space
-    elif [[ ${existing_free_kilobytes} -lt ${required_free_kilobytes} ]]; then
+    elif [[ ${existing_free_megabytes} -lt ${required_free_megabytes} ]]; then
         echo ""
         echo "::: Insufficient Disk Space!"
-        echo "::: Your system appears to be low on disk space. Pi-HotSpot recommends a minimum of $required_free_kilobytes KiloBytes."
-        echo "::: You only have ${existing_free_kilobytes} KiloBytes free."
+        echo "::: Your system appears to be low on disk space. Pi-HotSpot recommends a minimum of $required_free_megabytes MegaBytes."
+        echo "::: You only have ${existing_free_megabytes} MegaBytes free."
         echo ":::"
         echo "::: If this is a new install on a Raspberry Pi you may need to expand your disk."
         echo "::: Try running 'sudo raspi-config', and choose the 'expand file system option'"
         echo ":::"
-        echo "::: After rebooting, run this installation again. (curl -L https://raw.githubusercontent.com/pihomeserver/Pi-Hotspot-Script/master/pihotspot.sh | bash)"
+        echo "::: After rebooting, run this installation again."
 
         echo "Insufficient free space, exiting..."
         exit 1
@@ -181,13 +200,11 @@ update_package_cache() {
   if [ ! "${today}" == "${timestampAsDate}" ]; then
     #update package lists
     echo ":::"
-    #echo -n "::: ${PKG_MANAGER} update has not been run today. Running now..."
     if command -v debconf-apt-progress &> /dev/null; then
         $SUDO debconf-apt-progress -- ${UPDATE_PKG_CACHE}
     else
         $SUDO ${UPDATE_PKG_CACHE} &> /dev/null
     fi
-    #echo " done!"
   fi
 }
 
@@ -212,9 +229,10 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils avahi-daemon libavahi-client-dev git libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake hostapd php5-mysql php-pear php5-gd php-db php5-fpm libgd2-xpm-dev libpcrecpp0 libxpm4 nginx php5-xcache debhelper libssl-dev libcurl4-gnutls-dev mysql-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
+
   declare -a argArray1=("${!1}")
 
   if command -v debconf-apt-progress &> /dev/null; then
@@ -229,6 +247,14 @@ install_dependent_packages() {
 }
 
 check_root
+
+DEBIAN_VERSION=`cat /etc/*-release | grep VERSION_ID | awk -F= '{print $2}' | sed -e 's/^"//' -e 's/"$//'`
+if [[ $DEBIAN_VERSION -ne 9 ]];then
+        display_message ""
+        display_message "This script is used to get installed on Raspbian Stretch Lite"
+        display_message ""
+	exit 1
+fi
 
 verifyFreeDiskSpace
 
@@ -273,23 +299,45 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     exit 1
 fi
 
-display_message "Updating the system hostname"
-echo $HOTSPOT_NAME > /etc/hostname
-check_returned_code $?
-
-execute_command "echo 'mysql-server mysql-server/root_password password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password"
-execute_command "echo 'mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MySql password (confirmation)"
+execute_command "echo 'maria-db-$MARIADB_VERSION mysql-server/root_password password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MariaDb password"
+execute_command "echo 'maria-db-$MARIADB_VERSION mysql-server/root_password_again password $MYSQL_PASSWORD' | debconf-set-selections" true "Adding MariaDb password (confirmation)"
 
 display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
-MY_IP=`ifconfig $WAN_INTERFACE | grep "inet addr" | awk -F":" '{print $2}' | awk '{print $1}'`
+MY_IP=`ifconfig $WAN_INTERFACE | grep "inet " | awk '{ print $2 }'`
+
+if [ $AVAHI_INSTALL = "Y" ]; then
+    display_message "Adding Avahi dependencies"
+    PIHOTSPOT_DEPS+=( avahi-daemon libavahi-client-dev )
+
+    display_message "Updating the system hostname to $HOTSPOT_NAME"
+    echo $HOTSPOT_NAME > /etc/hostname
+    check_returned_code $?
+
+    execute_command "grep $HOTSPOT_NAME /etc/hosts" false "Updating /etc/hosts"
+    if [ $COMMAND_RESULT -ne 0 ]; then
+        sed -i "s/raspberrypi/$HOTSPOT_NAME/" /etc/hosts
+        check_returned_code $?
+    fi
+fi
 
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
 notify_package_updates_available
 
-execute_command "service mysql restart" true "Starting MySql service"
+execute_command "service mariadb restart" true "Starting MySql service"
 
-execute_command "grep $LAN_INTERFACE /etc/network/interfaces" false "Update interface configuration"
+execute_command "grep $WAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($WAN_INTERFACE)"
+if [ $COMMAND_RESULT -ne 0 ]; then
+cat >> /etc/network/interfaces << EOT
+
+auto $WAN_INTERFACE
+allow-hotplug $WAN_INTERFACE
+iface $WAN_INTERFACE inet dhcp
+EOT
+    check_returned_code $?
+fi
+
+execute_command "grep $LAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($LAN_INTERFACE)"
 if [ $COMMAND_RESULT -ne 0 ]; then
 cat >> /etc/network/interfaces << EOT
 
@@ -307,38 +355,76 @@ fi
 execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
 execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
 
+execute_command "service freeradius stop" true "Stopping freeradius service to update the configuration"
+
 display_message "Creating freeradius database"
-echo 'drop database if exists radius;' | mysql -u root -p$MYSQL_PASSWORD
-echo "GRANT USAGE ON *.* TO 'radius'@'localhost';" | mysql -u root -p$MYSQL_PASSWORD
-echo "DROP USER 'radius'@'localhost';" | mysql -u root -p$MYSQL_PASSWORD
-echo 'create database radius;' | mysql -u root -p$MYSQL_PASSWORD
+echo 'drop database if exists radius;' | mariadb -u root -p$MYSQL_PASSWORD
+echo "GRANT USAGE ON *.* TO 'radius'@'localhost';" | mariadb -u root -p$MYSQL_PASSWORD
+echo "DROP USER 'radius'@'localhost';" | mariadb -u root -p$MYSQL_PASSWORD
+echo 'create database radius;' | mariadb -u root -p$MYSQL_PASSWORD
 check_returned_code $?
 
 display_message "Installing freeradius schema"
-mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/schema.sql
+mariadb -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
 check_returned_code $?
 
-display_message "Creating administrator privileges"
-mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/admin.sql
-check_returned_code $?
-
-display_message "Creating additional tables"
-mysql -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/sql/mysql/nas.sql
+display_message "Adding setup data"
+mariadb -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/setup.sql
 check_returned_code $?
 
 display_message "Updating freeradius configuration - Activate SQL support"
-sed -i '/^#.*\$INCLUDE sql\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
+ln -sf /etc/freeradius/3.0/mods-available/sql /etc/freeradius/3.0/mods-enabled/sql
+check_returned_code $?
+chown -h freerad:freerad /etc/freeradius/3.0/mods-enabled/sql
+check_returned_code $?
+
+display_message "Configuration of the Freeradius SQL driver"
+sed -i 's/"rlm_sql_null"$/"rlm_sql_mysql"/' /etc/freeradius/3.0/mods-enabled/sql
+check_returned_code $?
+
+display_message "Change dialect of the Freeradius SQL driver to mysql"
+sed -i 's/"sqlite"$/"mysql"/' /etc/freeradius/3.0/mods-enabled/sql
+check_returned_code $?
+
+display_message "Configuration of the Freeradius SQL connection"
+DIALECT_LINE=`awk 's=index($0,"dialect = ") { print NR }' /etc/freeradius/3.0/mods-enabled/sql`
+((DIALECT_LINE+=1))
+#by default the radius_db is set to radius
+#sed -i "${DIALECT_LINE}iradius_db = \"radius\"" /etc/freeradius/3.0/mods-enabled/sql
+sed -i "${DIALECT_LINE}ipassword = \"radpass\"" /etc/freeradius/3.0/mods-enabled/sql
+sed -i "${DIALECT_LINE}ilogin = \"radius\"" /etc/freeradius/3.0/mods-enabled/sql
+sed -i "${DIALECT_LINE}iport = 3306" /etc/freeradius/3.0/mods-enabled/sql
+sed -i "${DIALECT_LINE}iserver = \"localhost\"" /etc/freeradius/3.0/mods-enabled/sql
 check_returned_code $?
 
 display_message "Updating freeradius configuration - Activate SQL counters"
-sed -i '/^#.*\$INCLUDE sql\/mysql\/counter\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
+#sed -i '/^#.*\$INCLUDE sql\/mysql\/counter\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
+ln -sf /etc/freeradius/3.0/mods-available/sqlcounter /etc/freeradius/3.0/mods-enabled/sqlcounter
+check_returned_code $?
+chown -h freerad:freerad /etc/freeradius/3.0/mods-enabled/sqlcounter
 check_returned_code $?
 
-display_message "Updating freeradius configuration - Activate daily counters"
-sed -i '/^#.*daily$/s/^#//g' /etc/freeradius/radiusd.conf
+display_message "Bug fix for SQL dialect once SQL Counters are activated"
+sed -i 's/dialect = \${modules\.sql\.dialect}/dialect = mysql/g' /etc/freeradius/3.0/mods-available/sqlcounter
 check_returned_code $?
 
-execute_command "service freeradius stop" true "Stoping freeradius service to update the configuration"
+display_message "Updating inner-tunnel configuration (1)"
+sed -i 's/^[ \t]*-sql/sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
+check_returned_code $?
+
+display_message "Updating inner-tunnel configuration (2)"
+sed -i 's/^#[ \t]*sql$/sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
+check_returned_code $?
+
+display_message "Updating freeradius default configuration (1)"
+sed -i 's/^[ \t]*-sql/sql/g' /etc/freeradius/3.0/sites-available/default
+check_returned_code $?
+
+display_message "Updating freeradius default configuration (2)"
+sed -i 's/^#[ \t]*sql$/sql/g' /etc/freeradius/3.0/sites-available/default
+check_returned_code $?
+
+execute_command "freeradius -C" true "Checking freeradius configuration"
 
 display_message "Activating IP forwarding"
 sed -i '/^#net\.ipv4\.ip_forward=1$/s/^#//g' /etc/sysctl.conf
@@ -394,12 +480,11 @@ sed -i "s/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g" /et
 check_returned_code $?
 
 display_message "Removing CoovaChilli secret key"
-#sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=$COOVACHILLI_SECRETKEY/g" /etc/chilli/defaults
 sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Updating UAMFORMAT"
-sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=http:\/\/$HOTSPOT_IP:$HOTSPOT_PORT/g" /etc/chilli/defaults
+sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=$HOTSPOT_PROTOCOL$HOTSPOT_IP:$HOTSPOT_PORT/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Updating UAMHOMEPAGE"
@@ -415,7 +500,7 @@ sed -i '20iHS_COAPORT=3799' /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Add firewall allowed port"
-sed -i '150iHS_TCP_PORTS="9000"' /etc/chilli/defaults
+sed -i "150iHS_TCP_PORTS=\"$HOTSPOT_PORT\"" /etc/chilli/defaults
 check_returned_code $?
 
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
@@ -432,14 +517,6 @@ if [ $HASERL_INSTALL = "Y" ]; then
     sed -i '/haserl=/s/^haserl=.*$/haserl=\/usr\/local\/bin\/haserl/g' /etc/chilli/wwwsh
     check_returned_code $?
 
-fi
-
-execute_command "service chilli start" true "Starting CoovaChilli service"
-
-execute_command "sleep 3 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
-if [ $COMMAND_RESULT -ne 0 ]; then
-    display_message "Unable to find chilli interface tun0"
-    exit 1
 fi
 
 display_message "Creating configuration file for hostapd"
@@ -459,8 +536,6 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-execute_command "service hostapd start" true "Starting hostapd service"
-
 execute_command "cd /usr/share/nginx/html/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
 
 display_message "Loading daloradius configuration into MySql"
@@ -470,9 +545,9 @@ check_returned_code $?
 display_message "Creating users privileges for localhost"
 echo "GRANT ALL ON radius.* to 'radius'@'localhost';" > /tmp/grant.sql
 check_returned_code $?
-display_message "Creating users privileges for 127.0.0.1"
-echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
-check_returned_code $?
+#display_message "Creating users privileges for 127.0.0.1"
+#echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
+#check_returned_code $?
 display_message "Granting users privileges"
 mysql -u root -p$MYSQL_PASSWORD < /tmp/grant.sql
 check_returned_code $?
@@ -490,7 +565,7 @@ server {
        	listen 80 default_server;
        	listen [::]:80 default_server;
 
-       	root /usr/share/nginx/html;
+       	root /usr/share/nginx/html/daloradius;
 
        	index index.html index.htm index.php;
 
@@ -502,13 +577,45 @@ server {
 
        	location ~ \.php$ {
        		include snippets/fastcgi-php.conf;
-       		fastcgi_pass unix:/var/run/php5-fpm.sock;
+       		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
        	}
 }' > /etc/nginx/sites-available/default
 check_returned_code $?
 
 display_message "Building NGINX configuration for the portal (default listen port : $HOTSPOT_PORT)"
-echo "
+if [ $HOTSPOT_HTTPS = "Y" ]; then
+    display_message "Creating folder for Nginx certificates"
+    mkdir /etc/nginx/certs/
+    check_returned_code $?
+
+    display_message "Generating self-signed certificate"
+    openssl req -x509 -nodes -days $CERT_DAYS -newkey rsa:2048 -keyout /etc/nginx/certs/$HOTSPOT_NAME.key -out /etc/nginx/certs/$HOTSPOT_NAME.crt -subj '/CN=$HOTSPOT_NAME'
+    check_returned_code $?
+
+    echo "
+server {
+       	listen $HOTSPOT_IP:$HOTSPOT_PORT ssl default_server;
+
+        ssl_certificate /etc/nginx/certs/$HOTSPOT_NAME.crt;
+	    ssl_certificate_key /etc/nginx/certs/$HOTSPOT_NAME.key;
+
+       	root /usr/share/nginx/portal;
+
+       	index index.html;
+
+       	server_name _;
+
+       	location / {
+       		try_files \$uri \$uri/ =404;
+       	}
+
+       	location ~ \.php\$ {
+       		include snippets/fastcgi-php.conf;
+       		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+       	}
+}" > /etc/nginx/sites-available/portal
+else
+    echo "
 server {
        	listen $HOTSPOT_IP:$HOTSPOT_PORT default_server;
 
@@ -524,9 +631,10 @@ server {
 
        	location ~ \.php\$ {
        		include snippets/fastcgi-php.conf;
-       		fastcgi_pass unix:/var/run/php5-fpm.sock;
+       		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
        	}
 }" > /etc/nginx/sites-available/portal
+fi
 check_returned_code $?
 
 execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
@@ -539,18 +647,27 @@ check_returned_code $?
 
 execute_command "nginx -t" true "Checking Nginx configuration file"
 
-execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
+#execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
 
-execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default"
+#execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default"
 
-execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/modules/sql.conf"
+#execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/modules/sql.conf"
 
-execute_command "freeradius -C" true "Checking freeradius configuration"
+execute_command "update-rc.d freeradius start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating Freeradius on boot"
+
 execute_command "service freeradius start" true "Starting freeradius service"
 
 execute_command "service nginx restart" true "Restarting Nginx"
 
 execute_command "service hostapd restart" true "Restarting hostapd"
+
+execute_command "service chilli start" true "Starting CoovaChilli service"
+
+execute_command "sleep 3 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
+if [ $COMMAND_RESULT -ne 0 ]; then
+    display_message "Unable to find chilli interface tun0"
+    exit 1
+fi
 
 # Last message to display once installation ended successfully
 
@@ -559,7 +676,11 @@ display_message ""
 display_message "Congratulation ! You now have your hotspot ready !"
 display_message ""
 display_message "- Wifi Hotspot available : $HOTSPOT_NAME"
-display_message "- For the user management, please connect to http://$MY_IP/daloradius/ or http://$HOTSPOT_NAME.local/daloradius/"
+if [ $AVAHI_INSTALL = "Y" ]; then
+    display_message "- For the user management, please connect to http://$MY_IP/ or http://$HOTSPOT_NAME.local/"
+else
+    display_message "- For the user management, please connect to http://$MY_IP/"
+fi
 display_message "  (login : administrator / password : radius)"
 
 exit 0

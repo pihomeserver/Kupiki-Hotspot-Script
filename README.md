@@ -23,12 +23,7 @@ What are the requirements ?
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
-- A micro SD card with a raspbian-like OS installed (recommanded one is the official [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/) ). Supported OS are 
-  - [minibian](https://minibianpi.wordpress.com/)
-  - [raspbian netinstall](https://github.com/debian-pi/raspbian-ua-netinst)
-  - [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/)
-
-_WARNING_ : For this project i used [raspbian jessie lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
+- A micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/) ). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
@@ -45,6 +40,8 @@ A log file named `pihotspot.log` will be created in the folder `/var/log`. Open 
 
 Full distro
 ====
+
+**Warning** The image is using the script v1.1, not the latest. A new build is in progress 
 
 If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
 
