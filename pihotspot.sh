@@ -653,7 +653,13 @@ execute_command "nginx -t" true "Checking Nginx configuration file"
 
 #execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/modules/sql.conf"
 
-execute_command "update-rc.d freeradius start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating Freeradius on boot"
+#execute_command "update-rc.d freeradius start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating Freeradius on boot"
+
+display_message "Adding Freeradius in system startup"
+awk '{new=$0; print old; old=new}END{print "/usr/sbin/service freeradius start"; print old}' /etc/rc.local > /tmp/rc.local
+check_returned_code $?
+cp /tmp/rc.local /etc/rc.local
+check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"
 

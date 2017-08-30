@@ -1,3 +1,6 @@
+**v1.4.1**
+- Bug : Freeradius not starting after reboot (added in rc.local to start after MariaDB)
+
 **v1.4**
 - Now check that Debian 9+ is used
 - Use MariaDB instead of MySql (based on default packages of Debian Stretch)
