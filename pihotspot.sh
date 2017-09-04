@@ -655,10 +655,30 @@ execute_command "nginx -t" true "Checking Nginx configuration file"
 
 #execute_command "update-rc.d freeradius start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating Freeradius on boot"
 
-display_message "Adding Freeradius in system startup"
-awk '{new=$0; print old; old=new}END{print "/usr/sbin/service freeradius start"; print old}' /etc/rc.local > /tmp/rc.local
+display_message "Adding Freeradius in systemd startup"
+#awk '{new=$0; print old; old=new}END{print "/usr/sbin/service freeradius start"; print old}' /etc/rc.local > /tmp/rc.local
+#check_returned_code $?
+#cp /tmp/rc.local /etc/rc.local
+echo "
+[Unit]
+Description=Start of freeradius after mysql
+After=syslog.target network.target
+After=mariadb.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/freeradius
+# disable timeout logic
+TimeoutSec=0
+#StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+
+[Install]
+WantedBy=multi-user.target
+" > /etc/systemd/system/freeradius.service
 check_returned_code $?
-cp /tmp/rc.local /etc/rc.local
+/bin/systemctl enable freeradius.service
 check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"

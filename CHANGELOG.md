@@ -1,3 +1,9 @@
+**v1.4.3**
+- Bug : Freeradius not starting after reboot (replace rc.local with systemd service)
+
+**v1.4.2**
+- Add Kupiki logo (temporary one ?)
+
 **v1.4.1**
 - Bug : Freeradius not starting after reboot (added in rc.local to start after MariaDB)
 
