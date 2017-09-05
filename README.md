@@ -41,7 +41,9 @@ A log file named `pihotspot.log` will be created in the folder `/var/log`. Open 
 Full distro
 ====
 
-**Warning** The image is using the script v1.1, not the latest. A new build is in progress 
+**Warning**
+
+The image is using the script v1.1 on Debian Jessie (not the last Stretch release). So you should have some bugs in it. It's recommanded to use the script instead this image.
 
 If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
 
