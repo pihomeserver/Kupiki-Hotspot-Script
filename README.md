@@ -49,9 +49,10 @@ The image is using the script v1.1 on Debian Jessie (not the last Stretch releas
 
 If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
 
-Credentials are user : pi / password : raspbian
+Credentials to connect to the pi using **SSH** (not in the hotspot) are user : pi / password : raspbian
 
 One more time : this is not the latest release so you will find bugs that have been already solved
+For hotspot users creation, manage them with daloradius
 
 Then
 =====
