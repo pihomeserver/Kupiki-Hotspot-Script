@@ -1,3 +1,6 @@
+**v1.4.4**
+- Change update of hotspot IP in the configuration file of the portal
+
 **v1.4.3**
 - Bug : Freeradius not starting after reboot (replace rc.local with systemd service)
 

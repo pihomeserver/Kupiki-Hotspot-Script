@@ -642,7 +642,7 @@ execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enab
 execute_command "cd /usr/share/nginx && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
 
 display_message "Updating Captive Portal file"
-sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/portal.js
+sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json
 check_returned_code $?
 
 execute_command "nginx -t" true "Checking Nginx configuration file"
