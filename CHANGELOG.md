@@ -1,3 +1,7 @@
+**v1.4.5**
+- Changed default apt-get option _--force-yes_ with _--allow-remove-essential --allow-change-held-packages_
+- Add package _localepurge_ installation. One of the first to apply savings on all packages 
+
 **v1.4.4**
 - Change update of hotspot IP in the configuration file of the portal
 

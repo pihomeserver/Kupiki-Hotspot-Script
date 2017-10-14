@@ -73,7 +73,8 @@ PKG_CACHE="/var/lib/apt/lists/"
 UPDATE_PKG_CACHE="${PKG_MANAGER} update"
 PKG_INSTALL="${PKG_MANAGER} --yes install"
 PKG_UPGRADE="${PKG_MANAGER} --yes upgrade"
-PKG_DIST_UPGRADE="apt dist-upgrade -y --force-yes"
+#PKG_DIST_UPGRADE="apt dist-upgrade -y --force-yes"
+PKG_DIST_UPGRADE="apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages"
 PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
 
 check_returned_code() {
@@ -122,6 +123,24 @@ prepare_install() {
 
     # Force IPv4 on APT resources
     execute_command "echo 'Acquire::ForceIPv4 \"true\";' | sudo tee /etc/apt/apt.conf.d/99force-ipv4" true "Updating APT config to force IPv4"
+
+    display_message "Configuring localepurge"
+cat > /tmp/localepurge.conf << EOF
+localepurge	localepurge/quickndirtycalc	boolean	false
+localepurge	localepurge/none_selected	boolean	false
+localepurge	localepurge/mandelete	boolean	true
+localepurge	localepurge/dontbothernew	boolean	true
+localepurge	localepurge/verbose	boolean	false
+localepurge	localepurge/use-dpkg-feature	boolean	false
+localepurge	localepurge/remove_no	note
+localepurge	localepurge/showfreedspace	boolean	true
+localepurge	localepurge/nopurge	multiselect	en, en_US.UTF-8
+EOF
+    check_returned_code $?
+    debconf-set-selections < /tmp/localepurge.conf
+    check_returned_code $?
+    rm -f /tmp/localepurge.conf
+    check_returned_code $?
 }
 
 check_root() {
@@ -219,7 +238,7 @@ notify_package_updates_available() {
   else
     echo "::: There are ${updatesToInstall} updates available for your system!"
     echo ":::"
-    execute_command "apt-get upgrade -y --force-yes" true "Upgrading the packages. Please be patient."
+    execute_command "apt-get upgrade -y --allow-remove-essential --allow-change-held-packages" true "Upgrading the packages. Please be patient."
   fi
 }
 
@@ -227,7 +246,7 @@ package_check_install() {
     dpkg-query -W -f='${Status}' "${1}" 2>/dev/null | grep -c "ok installed" || ${PKG_INSTALL} "${1}"
 }
 
-PIHOTSPOT_DEPS_START=( apt-transport-https )
+PIHOTSPOT_DEPS_START=( apt-transport-https localepurge )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
 PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
@@ -291,7 +310,7 @@ execute_command "/sbin/ifconfig -a | grep $LAN_INTERFACE" false "Checking if wla
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "Wifi interface not found. Upgrading the system first"
 
-    execute_command "apt dist-upgrade -y --force-yes" true "Upgrading the distro. Be patient"
+    execute_command "apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages" true "Upgrading the distro. Be patient"
 
     install_dependent_packages PIHOTSPOT_DEPS_WIFI[@]
 
@@ -321,6 +340,10 @@ if [ $AVAHI_INSTALL = "Y" ]; then
 fi
 
 install_dependent_packages PIHOTSPOT_DEPS[@]
+
+#execute_command "apt autoremove -y --force-yes" true "Remove unwanted"
+
+#execute_command "apt-get clean" true "Clear APT cache"
 
 notify_package_updates_available
 

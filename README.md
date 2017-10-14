@@ -23,7 +23,7 @@ What are the requirements ?
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
-- A micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/) ). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
+- A 4Gb micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/) ). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
