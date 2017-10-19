@@ -248,7 +248,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https localepurge )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
 
@@ -702,6 +702,10 @@ WantedBy=multi-user.target
 " > /etc/systemd/system/freeradius.service
 check_returned_code $?
 /bin/systemctl enable freeradius.service
+check_returned_code $?
+
+display_message "Correct configuration for Collectd daemon"
+sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"
