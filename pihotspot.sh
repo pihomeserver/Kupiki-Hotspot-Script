@@ -59,7 +59,7 @@ MARIADB_VERSION='10.1'
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 # Captive Portal URL
-HOTSPOTPORTAL_ARCHIVE="https://github.com/pihomeserver/Kupiki-Hotspot-Portal.git"
+HOTSPOTPORTAL_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal.git"
 # Daloradius URL
 DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
 # Haserl URL
@@ -716,10 +716,12 @@ execute_command "service hostapd restart" true "Restarting hostapd"
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
 
-execute_command "sleep 3 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
+execute_command "sleep 15 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
 if [ $COMMAND_RESULT -ne 0 ]; then
+    display_message "*** Warning ***"
     display_message "Unable to find chilli interface tun0"
-    exit 1
+    display_message "Try to restart chilli and check if tun0 interface is available (use 'ifconfig -a')"
+    #exit 1
 fi
 
 # Last message to display once installation ended successfully

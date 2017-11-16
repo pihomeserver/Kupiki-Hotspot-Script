@@ -1,3 +1,7 @@
+**v1.4.7**
+- Update Portal URL to link it to the Kupiki organization
+- Bug : error on tun0 when restarting chilli (timeout too short)
+
 **v1.4.6**
 - Correct Collectd configuration to avoid issue on startup
 - Cleaning in packages to install (thanks for the email)
