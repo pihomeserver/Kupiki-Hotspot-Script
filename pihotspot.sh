@@ -174,7 +174,7 @@ verifyFreeDiskSpace() {
     local required_free_megabytes=500
     # If user installs unattended-upgrades we will check for 500MB free
     echo ":::"
-    echo -n "::: Verifying free disk space ($required_free_megabytes Kb)"
+    echo -n "::: Verifying free disk space ($required_free_megabytes Mb)"
     local existing_free_megabytes=$(df -Pk | grep -m1 '\/$' | awk '{print $4}')
 
     # - Unknown free disk space , not a integer
@@ -240,6 +240,24 @@ notify_package_updates_available() {
     echo ":::"
     execute_command "apt-get upgrade -y --allow-remove-essential --allow-change-held-packages" true "Upgrading the packages. Please be patient."
   fi
+}
+
+download_all_sources() {
+  echo ":::"
+  execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previous sources of CoovaChilli project"
+
+  execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
+
+  if [ $HASERL_INSTALL = "Y" ]; then
+
+    execute_command "cd /usr/src && rm -f ${HASERL_ARCHIVE}.tar.gz && wget $HASERL_URL" true "Download Haserl"
+
+  fi
+
+  execute_command "cd /usr/src/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
+
+  execute_command "cd /usr/src/ && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+
 }
 
 package_check_install() {
@@ -347,7 +365,11 @@ install_dependent_packages PIHOTSPOT_DEPS[@]
 
 notify_package_updates_available
 
+download_all_sources
+
 execute_command "service mariadb restart" true "Starting MySql service"
+
+exit 0;
 
 execute_command "grep $WAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($WAN_INTERFACE)"
 if [ $COMMAND_RESULT -ne 0 ]; then
@@ -454,11 +476,8 @@ sed -i '/^#net\.ipv4\.ip_forward=1$/s/^#//g' /etc/sysctl.conf
 check_returned_code $?
 execute_command "/etc/init.d/networking restart" true "Restarting network service to take IP forwarding into account"
 
-execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previous sources of CoovaChilli project"
-
-execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
-
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
+
 execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
@@ -530,9 +549,7 @@ execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Ac
 
 if [ $HASERL_INSTALL = "Y" ]; then
 
-    execute_command "cd /usr/src && wget $HASERL_URL" true "Download Haserl"
-
-    execute_command "cd /usr/src && tar zxvf $HASERL_ARCHIVE.tar.gz" true "Uncompressing Haserl archive"
+    execute_command "cd /usr/src && tar zxvf ${HASERL_ARCHIVE}.tar.gz" true "Uncompressing Haserl archive"
 
     execute_command "cd /usr/src/$HASERL_ARCHIVE && ./configure && make && make install" true "Compiling and installing Haserl"
 
@@ -559,7 +576,7 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-execute_command "cd /usr/share/nginx/html/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
+execute_command "mkdir /usr/share/nginx/html/daloradius && cp -Rf /usr/src/daloradius /usr/share/nginx/html/daloradius" true "Installing Daloradius in Nginx folder"
 
 display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
@@ -662,7 +679,7 @@ check_returned_code $?
 
 execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
 
-execute_command "cd /usr/share/nginx && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+execute_command "mkdir /usr/share/nginx/portal && /cp -Rf /usr/src/portal /usr/share/nginx/portal" true "Installing the portal in Nginx folder"
 
 display_message "Updating Captive Portal file"
 sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json

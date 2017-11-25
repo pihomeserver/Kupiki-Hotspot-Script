@@ -1,3 +1,7 @@
+**v1.4.8**
+- Bug #71 : create a one step download for all sources requirements and perform the download before any technical action
+- Bug : Correct typo for free disk space check 
+
 **v1.4.7**
 - Update Portal URL to link it to the Kupiki organization
 - Bug : error on tun0 when restarting chilli (timeout too short)
