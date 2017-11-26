@@ -369,8 +369,6 @@ download_all_sources
 
 execute_command "service mariadb restart" true "Starting MySql service"
 
-exit 0;
-
 execute_command "grep $WAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($WAN_INTERFACE)"
 if [ $COMMAND_RESULT -ne 0 ]; then
 cat >> /etc/network/interfaces << EOT
