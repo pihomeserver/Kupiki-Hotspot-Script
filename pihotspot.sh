@@ -574,7 +574,7 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-execute_command "mkdir /usr/share/nginx/html/daloradius && cp -Rf /usr/src/daloradius /usr/share/nginx/html/daloradius" true "Installing Daloradius in Nginx folder"
+execute_command "cp -Rf /usr/src/daloradius /usr/share/nginx/html/" true "Installing Daloradius in Nginx folder"
 
 display_message "Loading daloradius configuration into MySql"
 mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
@@ -677,7 +677,7 @@ check_returned_code $?
 
 execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enabled/portal" true "Activating portal website"
 
-execute_command "mkdir /usr/share/nginx/portal && /cp -Rf /usr/src/portal /usr/share/nginx/portal" true "Installing the portal in Nginx folder"
+execute_command "cp -Rf /usr/src/portal /usr/share/nginx/" true "Installing the portal in Nginx folder"
 
 display_message "Updating Captive Portal file"
 sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json

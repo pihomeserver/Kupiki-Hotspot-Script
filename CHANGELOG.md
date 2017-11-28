@@ -1,3 +1,6 @@
+**v1.4.9**
+- Bug #72 : correct crash with daloradius and portal copies
+
 **v1.4.8**
 - Bug #71 : create a one step download for all sources requirements and perform the download before any technical action
 - Bug : Correct typo for free disk space check 
