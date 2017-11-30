@@ -479,17 +479,17 @@ execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Bu
 execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
-echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
+echo 'iptables -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
 check_returned_code $?
 
 display_message "Block access from LAN to WAN except portal"
 cat >> /etc/chilli/up.sh << EOF
 LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
-ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+iptables -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 if [ \$? -ne 0 ]
 then
-    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
-    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+    iptables -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
+    iptables -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
 fi
 EOF
 
