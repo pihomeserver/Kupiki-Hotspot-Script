@@ -38,6 +38,9 @@ CERT_DAYS="730"
 # Make Avahi optional
 # Set value to Y or N
 AVAHI_INSTALL="Y"
+# Install Daloradius Portal (compatible with FR2 only in theory)
+# Set value to Y or N
+DALORADIUS_INSTALL="Y"
 
 # *************************************
 #
@@ -254,7 +257,11 @@ download_all_sources() {
 
   fi
 
-  execute_command "cd /usr/src/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
+  if [ $DALORADIUS_INSTALL = "Y" ]; then
+
+    execute_command "cd /usr/src/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
+
+  fi
 
   execute_command "cd /usr/src/ && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
 
@@ -574,51 +581,63 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-execute_command "cp -Rf /usr/src/daloradius /usr/share/nginx/html/" true "Installing Daloradius in Nginx folder"
+if [ $DALORADIUS_INSTALL = "Y" ]; then
 
-display_message "Loading daloradius configuration into MySql"
-mysql -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
-check_returned_code $?
+    execute_command "cp -Rf /usr/src/daloradius /usr/share/nginx/html/" true "Installing Daloradius in Nginx folder"
 
-display_message "Creating users privileges for localhost"
-echo "GRANT ALL ON radius.* to 'radius'@'localhost';" > /tmp/grant.sql
-check_returned_code $?
-#display_message "Creating users privileges for 127.0.0.1"
-#echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
-#check_returned_code $?
-display_message "Granting users privileges"
-mysql -u root -p$MYSQL_PASSWORD < /tmp/grant.sql
-check_returned_code $?
+    display_message "Loading daloradius configuration into MySql"
+    mariadb -u root -p$MYSQL_PASSWORD radius < /usr/share/nginx/html/daloradius/contrib/db/fr2-mysql-daloradius-and-freeradius.sql
+    check_returned_code $?
 
-display_message "Configuring daloradius DB user name"
-sed -i "s/\$configValues\['CONFIG_DB_USER'\] = 'root';/\$configValues\['CONFIG_DB_USER'\] = 'radius';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
-check_returned_code $?
-display_message "Configuring daloradius DB user password"
-sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
-check_returned_code $?
+    display_message "Drop freeradius tables created by Daloradius to reload the Freeradius 3.0 version"
+    echo 'drop table if exists radius.radacct, radius.radcheck, radius.radgroupcheck, radius.radgroupreply, radius.radreply, radius.radusergroup, radius.radpostauth, radius.nas ;' | mariadb -u root -p$MYSQL_PASSWORD
+    check_returned_code $?
 
-display_message "Building NGINX configuration (default listen port : 80)"
-echo '
-server {
-       	listen 80 default_server;
-       	listen [::]:80 default_server;
+    display_message "Reload original Freeradius schema"
+    mariadb -u root -p$MYSQL_PASSWORD radius < /etc/freeradius/3.0/mods-config/sql/main/mysql/schema.sql
+    check_returned_code $?
 
-       	root /usr/share/nginx/html/daloradius;
+    display_message "Creating users privileges for localhost"
+    echo "GRANT ALL ON radius.* to 'radius'@'localhost';" > /tmp/grant.sql
+    check_returned_code $?
+    #display_message "Creating users privileges for 127.0.0.1"
+    #echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
+    #check_returned_code $?
+    display_message "Granting users privileges"
+    mysql -u root -p$MYSQL_PASSWORD < /tmp/grant.sql
+    check_returned_code $?
 
-       	index index.html index.htm index.php;
+    display_message "Configuring daloradius DB user name"
+    sed -i "s/\$configValues\['CONFIG_DB_USER'\] = 'root';/\$configValues\['CONFIG_DB_USER'\] = 'radius';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+    check_returned_code $?
+    display_message "Configuring daloradius DB user password"
+    sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+    check_returned_code $?
 
-       	server_name _;
+    display_message "Building NGINX configuration (default listen port : 80)"
+    echo '
+    server {
+            listen 80 default_server;
+            listen [::]:80 default_server;
 
-       	location / {
-       		try_files $uri $uri/ =404;
-       	}
+            root /usr/share/nginx/html/daloradius;
 
-       	location ~ \.php$ {
-       		include snippets/fastcgi-php.conf;
-       		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
-       	}
-}' > /etc/nginx/sites-available/default
-check_returned_code $?
+            index index.html index.htm index.php;
+
+            server_name _;
+
+            location / {
+                try_files $uri $uri/ =404;
+            }
+
+            location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+            }
+    }' > /etc/nginx/sites-available/default
+    check_returned_code $?
+
+fi
 
 display_message "Building NGINX configuration for the portal (default listen port : $HOTSPOT_PORT)"
 if [ $HOTSPOT_HTTPS = "Y" ]; then

@@ -1,3 +1,7 @@
+**v1.4.10**
+- Update script to make Daloradius optional (installed by default)
+- Bug #76 : correct crash with daloradius and portal copies
+
 **v1.4.9**
 - Bug #72 : correct crash with daloradius and portal copies
 
