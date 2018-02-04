@@ -1,3 +1,10 @@
+**v1.5**
+- Update script to add a connection logger to follow users traffic. Logs contents have to be checked with the radacct table to link user name with date/ip information. The log file contains
+  - The date of the request
+  - Source IP
+  - Destination IP
+- Bug #21 / #45 : corrected with the logger
+
 **v1.4.10**
 - Update script to make Daloradius optional (installed by default)
 - Bug #76 : correct crash with daloradius and portal copies

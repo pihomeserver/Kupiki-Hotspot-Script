@@ -76,6 +76,6 @@ Screenshots
 Support
 =======
 
-Please use input your requests or issues in the GIT repository 
+Please input your requests or issues in the [GIT repository](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) 
 
-Any contribution is welcome !
+Contributions are welcome !

@@ -61,10 +61,12 @@ fi
 MARIADB_VERSION='10.1'
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
-# Captive Portal URL
-HOTSPOTPORTAL_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal.git"
 # Daloradius URL
 DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
+# Captive Portal URL
+HOTSPOTPORTAL_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal.git"
+# Kupiki Logger URL
+KUPIKI_LOGGER_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Logger.git"
 # Haserl URL
 HASERL_URL="http://downloads.sourceforge.net/project/haserl/haserl-devel/haserl-0.9.35.tar.gz"
 # Haserl archive name based on the URL (keep the same version)
@@ -264,6 +266,8 @@ download_all_sources() {
   fi
 
   execute_command "cd /usr/src/ && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+
+  execute_command "cd /usr/src/ && rm -rf logger && git clone $KUPIKI_LOGGER_ARCHIVE logger" true "Cloning Kupiki Logger project"
 
 }
 
@@ -742,6 +746,9 @@ display_message "Correct configuration for Collectd daemon"
 sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
+display_message "Install Kupiki Logger"
+execute_command "cd /usr/src/logger && chmod +x install.sh && ./install.sh" true "Running installer"
+
 execute_command "service freeradius start" true "Starting freeradius service"
 
 execute_command "service nginx restart" true "Restarting Nginx"
@@ -755,8 +762,11 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "*** Warning ***"
     display_message "Unable to find chilli interface tun0"
     display_message "Try to restart chilli and check if tun0 interface is available (use 'ifconfig -a')"
+    # Do not exit to display connection information
     #exit 1
 fi
+
+execute_command "service kupiki-logger start" true "Starting Kupiki Logger service"
 
 # Last message to display once installation ended successfully
 
