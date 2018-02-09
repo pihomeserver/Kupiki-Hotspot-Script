@@ -15,6 +15,8 @@ Once the script is executed, you will get :
     - daloRadius is installed by default, served by Nginx web server
     - A full management of the hotspot, with batch for user creation, vouchers, NAS, etc.
 
+The installed system have been secured using [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) and is compliant with french laws about free wifi hotspots ([R. 10-13 et R. 10-14 , IV of CPCE](https://www.cdse.fr/wifi-et-conservation-des-donnees))
+
 Requirements
 ============
 
@@ -23,7 +25,7 @@ What are the requirements ?
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
-- A 4Gb micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/) ). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
+- A 4Gb micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Usage
 =====
@@ -71,7 +73,6 @@ Screenshots
 <img src="http://www.pihomeserver.fr/hosting/portalConnected.png">
 <h4 align="center">Daloradius</h4>
 <img src="http://www.pihomeserver.fr/hosting/daloradius.png">
-
 
 Support
 =======

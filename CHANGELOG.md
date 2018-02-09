@@ -1,3 +1,14 @@
+**v1.7**
+- Update of the data logger. In addition of the radacct table (username, date, duration, assigner IP),
+some additional data are stored (source and destination IP).
+All information are compliant with french laws [R. 10-13 et R. 10-14 , IV of CPCE](https://www.cdse.fr/wifi-et-conservation-des-donnees). No content is saved to respect privacy. Administrators are in charge to complete the user profile to get more details if needed (firstname, lastname, phone number, etc.)
+Currently the technical caracteristics if the device are still missing and should be grabbed by the portal it self.
+- Option to enable the integrated Bluetooth (disabled by default)
+
+**v1.6**
+- Secure the system by adding security rules based on [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) 
+- Issue #49 : add a message on SSH login with current script version
+
 **v1.5**
 - Update script to add a connection logger to follow users traffic. Logs contents have to be checked with the radacct table to link user name with date/ip information. The log file contains
   - The date of the request

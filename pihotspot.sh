@@ -41,6 +41,9 @@ AVAHI_INSTALL="Y"
 # Install Daloradius Portal (compatible with FR2 only in theory)
 # Set value to Y or N
 DALORADIUS_INSTALL="Y"
+# Enable/Disable Bluetooth
+# Set value to Y or N
+BLUETOOTH_ENABLED="N"
 
 # *************************************
 #
@@ -48,6 +51,8 @@ DALORADIUS_INSTALL="Y"
 #
 # *************************************
 
+# Current script version
+KUPIKI_VERSION="1.7"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
@@ -267,17 +272,38 @@ download_all_sources() {
 
   execute_command "cd /usr/src/ && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
 
-  execute_command "cd /usr/src/ && rm -rf logger && git clone $KUPIKI_LOGGER_ARCHIVE logger" true "Cloning Kupiki Logger project"
+}
 
+secure_system() {
+  display_message ":::"
+  display_message "::: Configure sysctl kernel parameters"
+  display_message ":::"
+cat >> /etc/sysctl.d/kupiki.conf << EOT
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.tcp_syncookies = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.accept_source_route = 0
+net.netfilter.nf_conntrack_tcp_timeout_established = 3600
+net.ipv4.conf.all.log_martians = 0
+net.netfilter.nf_conntrack_helper = 0
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.all.autoconf = 0
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.default.autoconf = 0
+EOT
 }
 
 package_check_install() {
     dpkg-query -W -f='${Status}' "${1}" 2>/dev/null | grep -c "ok installed" || ${PKG_INSTALL} "${1}"
 }
 
-PIHOTSPOT_DEPS_START=( apt-transport-https localepurge )
+PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils git hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils nfdump figlet git hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
 
@@ -306,6 +332,8 @@ fi
 
 verifyFreeDiskSpace
 
+secure_system
+
 prepare_install
 
 update_package_cache
@@ -313,6 +341,13 @@ update_package_cache
 notify_package_updates_available
 
 install_dependent_packages PIHOTSPOT_DEPS_START[@]
+
+if [ $BLUETOOTH_ENABLED = "N" ]; then
+    display_message "Disable integrated Bluetooth support (After next reboot)"
+    echo "
+dtoverlay=pi3-disable-bt-overlay" >> /boot/config.txt
+    check_returned_code $?
+fi
 
 execute_command "dpkg --purge --force-all coova-chilli" true "Remove old configuration of Coova Chilli"
 execute_command "dpkg --purge --force-all haserl" true "Remove old configuration of haserl"
@@ -370,9 +405,7 @@ fi
 
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
-#execute_command "apt autoremove -y --force-yes" true "Remove unwanted"
-
-#execute_command "apt-get clean" true "Clear APT cache"
+DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe
 
 notify_package_updates_available
 
@@ -408,6 +441,14 @@ fi
 
 execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
 execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
+
+display_message "Stopping fprobe service"
+service fprobe stop
+check_returned_code $?
+
+display_message "Stopping nfdump service"
+service nfdump stop
+check_returned_code $?
 
 execute_command "service freeradius stop" true "Stopping freeradius service to update the configuration"
 
@@ -452,7 +493,6 @@ sed -i "${DIALECT_LINE}iserver = \"localhost\"" /etc/freeradius/3.0/mods-enabled
 check_returned_code $?
 
 display_message "Updating freeradius configuration - Activate SQL counters"
-#sed -i '/^#.*\$INCLUDE sql\/mysql\/counter\.conf$/s/^#//g' /etc/freeradius/radiusd.conf
 ln -sf /etc/freeradius/3.0/mods-available/sqlcounter /etc/freeradius/3.0/mods-enabled/sqlcounter
 check_returned_code $?
 chown -h freerad:freerad /etc/freeradius/3.0/mods-enabled/sqlcounter
@@ -708,18 +748,7 @@ check_returned_code $?
 
 execute_command "nginx -t" true "Checking Nginx configuration file"
 
-#execute_command "mv /etc/freeradius/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sql/mysql/counter.conf /etc/freeradius/sql/mysql/counter.conf" true "Updating /etc/freeradius/sql/mysql/counter.conf"
-
-#execute_command "mv /etc/freeradius/sites-available/default /etc/freeradius/sites-available/default.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/sites-available/default /etc/freeradius/sites-available/default" true "Updating /etc/freeradius/sites-available/default"
-
-#execute_command "mv /etc/freeradius/sql.conf /etc/freeradius/sql.conf.bak && cp /usr/share/nginx/html/daloradius/contrib/configs/freeradius-2.1.8/cfg1/raddb/modules/sql.conf /etc/freeradius/sql.conf" true "Updating /etc/freeradius/modules/sql.conf"
-
-#execute_command "update-rc.d freeradius start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating Freeradius on boot"
-
 display_message "Adding Freeradius in systemd startup"
-#awk '{new=$0; print old; old=new}END{print "/usr/sbin/service freeradius start"; print old}' /etc/rc.local > /tmp/rc.local
-#check_returned_code $?
-#cp /tmp/rc.local /etc/rc.local
 echo "
 [Unit]
 Description=Start of freeradius after mysql
@@ -746,16 +775,62 @@ display_message "Correct configuration for Collectd daemon"
 sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
-display_message "Install Kupiki Logger"
-execute_command "cd /usr/src/logger && chmod +x install.sh && ./install.sh" true "Running installer"
+display_message "Updating fprobe configuration"
+cat > /etc/default/fprobe << EOT
+INTERFACE="tun0"
+FLOW_COLLECTOR="127.0.0.1:2055"
+OTHER_ARGS="-fip"
+EOT
+check_returned_code $?
+
+display_message "Updating nfdump configuration"
+cat > /etc/default/nfdump << EOT
+# nfcapd is controlled by nfsen
+nfcapd_start=yes
+EOT
+check_returned_code $?
+
+display_message "Updating nfdump service configuration"
+sed -i 's/^DAEMON_ARGS.*/DAEMON_ARGS="-D -l $DATA_BASE_DIR -P $PIDFILE -S 7"/' /etc/init.d/nfdump
+check_returned_code $?
+
+display_message "Create banner on login"
+/usr/bin/figlet -f lean -c "Kupiki Hotspot" | tr ' _/' ' /' > /etc/ssh/kupiki-banner
+check_returned_code $?
+
+display_message "Append script version to the banner"
+echo "
+
+Kupiki Hotspot - Version $KUPIKI_VERSION - (c) www.pihomeserver.fr
+
+" >> /etc/ssh/kupiki-banner
+check_returned_code $?
+
+display_message "Changing banner rights"
+chmod 644 /etc/ssh/kupiki-banner && chown root:root /etc/ssh/kupiki-banner
+check_returned_code $?
+
+display_message "Activating the banner for SSH"
+sed -i "s?^#Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
+check_returned_code $?
+
+display_message ""
+sed -i "s?^Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
+check_returned_code $?
 
 execute_command "service freeradius start" true "Starting freeradius service"
 
-execute_command "service nginx restart" true "Restarting Nginx"
+execute_command "service nginx reload" true "Restarting Nginx"
 
 execute_command "service hostapd restart" true "Restarting hostapd"
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
+
+execute_command "service fprobe start" true "Starting fprobe service"
+
+execute_command "service nfdump start" true "Starting fprobe service"
+
+execute_command "service ssh reload" true "Reload configuration for SSH service"
 
 execute_command "sleep 15 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
 if [ $COMMAND_RESULT -ne 0 ]; then
@@ -765,8 +840,6 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     # Do not exit to display connection information
     #exit 1
 fi
-
-execute_command "service kupiki-logger start" true "Starting Kupiki Logger service"
 
 # Last message to display once installation ended successfully
 
