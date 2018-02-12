@@ -52,7 +52,7 @@ BLUETOOTH_ENABLED="N"
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.7"
+KUPIKI_VERSION="1.7.1"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
