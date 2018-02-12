@@ -790,8 +790,12 @@ nfcapd_start=yes
 EOT
 check_returned_code $?
 
-display_message "Updating nfdump service configuration"
-sed -i 's/^DAEMON_ARGS.*/DAEMON_ARGS="-D -l $DATA_BASE_DIR -P $PIDFILE -S 7"/' /etc/init.d/nfdump
+display_message "Updating nfdump service configuration (init.d)"
+sed -i 's/^DAEMON_ARGS.*/DAEMON_ARGS="-D -l $DATA_BASE_DIR -P $PIDFILE -z -S 7"/' /etc/init.d/nfdump
+check_returned_code $?
+
+display_message "Updating nfdump service configuration (systemd)"
+sed -i 's/^ExecStart.*/ExecStart=\/usr\/bin\/nfcapd -D -l \/var\/cache\/nfdump -P \/var\/run\/nfcapd.pid -p 2055 -z -S 7/' /lib/systemd/system/nfdump.service
 check_returned_code $?
 
 display_message "Create banner on login"
@@ -828,7 +832,9 @@ execute_command "service chilli start" true "Starting CoovaChilli service"
 
 execute_command "service fprobe start" true "Starting fprobe service"
 
-execute_command "service nfdump start" true "Starting fprobe service"
+execute_command "systemctl daemon-reload" true "Reloading units for systemctl"
+
+execute_command "service nfdump start" true "Starting nfdump service"
 
 execute_command "service ssh reload" true "Reload configuration for SSH service"
 

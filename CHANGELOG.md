@@ -1,3 +1,6 @@
+**v1.7.1**
+- Correct issue with the service nfdump started by systemd instead of init.d so the parameters about the folders structure is incorrect
+
 **v1.7**
 - Update of the data logger. In addition of the radacct table (username, date, duration, assigner IP),
 some additional data are stored (source and destination IP).
