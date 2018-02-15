@@ -1,5 +1,10 @@
+**v1.7.2**
+- Extand requested disk space from 500MB to 1GB
+- Add option to define how long logs should be kept 
+- Issue #81 : add option to install fail2ban (activated by default)
+
 **v1.7.1**
-- Correct issue with the service nfdump started by systemd instead of init.d so the parameters about the folders structure is incorrect
+- Correct issue with the service nfdump started by systemd instead of init.d
 
 **v1.7**
 - Update of the data logger. In addition of the radacct table (username, date, duration, assigner IP),
@@ -17,17 +22,17 @@ Currently the technical caracteristics if the device are still missing and shoul
   - The date of the request
   - Source IP
   - Destination IP
-- Bug #21 / #45 : corrected with the logger
+- Issue #21 / #45 : corrected with the logger
 
 **v1.4.10**
 - Update script to make Daloradius optional (installed by default)
-- Bug #76 : correct crash with daloradius and portal copies
+- Issue #76 : correct crash with daloradius and portal copies
 
 **v1.4.9**
-- Bug #72 : correct crash with daloradius and portal copies
+- Issue #72 : correct crash with daloradius and portal copies
 
 **v1.4.8**
-- Bug #71 : create a one step download for all sources requirements and perform the download before any technical action
+- Issue #71 : create a one step download for all sources requirements and perform the download before any technical action
 - Bug : Correct typo for free disk space check 
 
 **v1.4.7**
@@ -60,32 +65,32 @@ Currently the technical caracteristics if the device are still missing and shoul
 - Use of Freeradius 3.0.12 (default package from Debian)
 - Make Avahi optional (default is to install it)
 - Make HTTPS for the web portal optional (default is not to install)
-- Bug #50 : crash was due to the use of Debian Stretch 9
-- Bug #54 : crash of the script in case the Chilli service is already running
-- Bug #55 : wrong firewall port in Coova
+- Issue #50 : crash was due to the use of Debian Stretch 9
+- Issue #54 : crash of the script in case the Chilli service is already running
+- Issue #55 : wrong firewall port in Coova
 
 **v1.3**
 - Improvement #44 : expose front web portal in HTTPS using self signed certificate
 
 **v1.2**
-- Improvement #40 : you can now connect to daloradius using Bonjour
-- Improvement #47 : Haserl 0.9.35 is no more needed but you can still install it by setting HASERL_INSTALL to Y in the script
+- Issue #40 : you can now connect to daloradius using Bonjour
+- Issue #47 : Haserl 0.9.35 is no more needed but you can still install it by setting HASERL_INSTALL to Y in the script
 
 **v1.1**
 - Create a ready-to-use image
 - Add instructions to clear installation if the script is executed more than one time 
-- Bug #41 : use LAN ip for web portal to avoid DHCP issues
+- Issue #41 : use LAN ip for web portal to avoid DHCP issues
 
 **v1.0**
 - Implement a new customizable captive portal (HTML / JS / CSS)
-- Bug fix #7 / #28 / #29 : customize captive portal
+- Issues #7 / #28 / #29 : customize captive portal
 
 **v0.9.2**
 - Replace call of _iptables_ by _ipt_ in _up.sh_
-- Bug fix #32 / #30 : block WAN access from LAN 
+- Issues #32 / #30 : block WAN access from LAN 
 
 **v0.9.1**
-- Request #38 : Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
+- Issue #38 : Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
 - Remove double installation request for git
 
 **v0.9**
@@ -94,8 +99,8 @@ Currently the technical caracteristics if the device are still missing and shoul
   - All dependencies are installed in one time
   - Check that the script is executed as root
   - Check that disk space is available 
-- Bug fix #14 : add a check for the tun module on Raspbian Jessie Lite
-- Bug fix #25 : force IPv4 for APT  
+- Issue #14 : add a check for the tun module on Raspbian Jessie Lite
+- Issue #25 : force IPv4 for APT  
 
 **v0.8**
 - Add a test to control that the script is executed by root or using sudo

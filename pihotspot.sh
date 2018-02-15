@@ -44,6 +44,18 @@ DALORADIUS_INSTALL="Y"
 # Enable/Disable Bluetooth
 # Set value to Y or N
 BLUETOOTH_ENABLED="N"
+# Enable/Disable fail2ban
+# Set value to Y or N
+FAIL2BAN_ENABLED="Y"
+# Enable/Disable Netflow logs
+# Set value to Y or N
+NETFLOW_ENABLED="Y"
+# Define how long Netflow logs will be stored
+# Sets the max life time for files generated for Netflow monitoring. The supplied maxlife_time accepts values such as 31d, 240H 1.5d etc.
+# Accpeted time scales are w (weeks) d (days) H (hours).
+# A value of 0 disables the max lifetime limit. If no scale is given, H (hours) are assumed.
+# By default data are stored 365 days (value set to 365d)
+NETFLOW_LOGS_DAYS="365d"
 
 # *************************************
 #
@@ -52,7 +64,7 @@ BLUETOOTH_ENABLED="N"
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.7.1"
+KUPIKI_VERSION="1.7.2"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
@@ -181,8 +193,8 @@ jumpto() {
 
 verifyFreeDiskSpace() {
     # Needed free space
-    local required_free_megabytes=500
-    # If user installs unattended-upgrades we will check for 500MB free
+    local required_free_megabytes=1024
+    # If user installs unattended-upgrades we will check for 1GB free
     echo ":::"
     echo -n "::: Verifying free disk space ($required_free_megabytes Mb)"
     local existing_free_megabytes=$(df -Pk | grep -m1 '\/$' | awk '{print $4}')
@@ -303,7 +315,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils nfdump figlet git hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
 
@@ -405,7 +417,9 @@ fi
 
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
-DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe
+if [ $NETFLOW_ENABLED = "Y" ]; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe
+fi
 
 notify_package_updates_available
 
@@ -442,13 +456,48 @@ fi
 execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
 execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
 
-display_message "Stopping fprobe service"
-service fprobe stop
-check_returned_code $?
+if [ $NETFLOW_ENABLED = "Y" ]; then
+    display_message "Stopping fprobe service"
+    service fprobe stop
+    check_returned_code $?
 
-display_message "Stopping nfdump service"
-service nfdump stop
-check_returned_code $?
+    display_message "Stopping nfdump service"
+    service nfdump stop
+    check_returned_code $?
+
+    display_message "Updating fprobe configuration"
+    cat > /etc/default/fprobe << EOT
+INTERFACE="tun0"
+FLOW_COLLECTOR="127.0.0.1:2055"
+OTHER_ARGS="-fip"
+EOT
+    check_returned_code $?
+
+    display_message "Updating nfdump configuration"
+    cat > /etc/default/nfdump << EOT
+nfcapd_start=yes
+EOT
+    check_returned_code $?
+
+    display_message "Updating nfdump service configuration (init.d)"
+    sed -i 's/^DAEMON_ARGS.*/DAEMON_ARGS="-D -l $DATA_BASE_DIR -P $PIDFILE -z -S 7"/' /etc/init.d/nfdump
+    check_returned_code $?
+
+    display_message "Updating nfdump service configuration (systemd)"
+    sed -i 's/^ExecStart.*/ExecStart=\/usr\/bin\/nfcapd -D -l \/var\/cache\/nfdump -P \/var\/run\/nfcapd.pid -p 2055 -z -S 7 -e/' /lib/systemd/system/nfdump.service
+    check_returned_code $?
+
+    display_message "Set cleaning options for Netflow data"
+    /usr/bin/nfexpire -t $NETFLOW_LOGS_DAYS -e /var/cache/nfdump
+    check_returned_code $?
+
+    display_message "Adding logs cleaning every day at 1am (system time)"
+    execute_command "grep nfexpire /etc/crontab" false "Adding Netflow stats update in the crontab"
+    if [ $COMMAND_RESULT -ne 0 ]; then
+        echo "00 01 * * * root /usr/bin/nfexpire -r /var/cache/nfdump" >> /etc/crontab
+        check_returned_code $?
+    fi
+fi
 
 execute_command "service freeradius stop" true "Stopping freeradius service to update the configuration"
 
@@ -775,28 +824,33 @@ display_message "Correct configuration for Collectd daemon"
 sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
-display_message "Updating fprobe configuration"
-cat > /etc/default/fprobe << EOT
-INTERFACE="tun0"
-FLOW_COLLECTOR="127.0.0.1:2055"
-OTHER_ARGS="-fip"
+if [ $FAIL2BAN_ENABLED = "Y" ]; then
+    display_message "Creating fail2ban local configuration"
+    cp /etc/fail2ban/fail2ban.conf /etc/fail2ban/fail2ban.local
+    check_returned_code $?
+
+    display_message "Configuring fail2ban jail rules"
+    cat > /etc/fail2ban/jail.local << EOT
+[DEFAULT]
+ignoreip = 127.0.0.1
+bantime  = 600
+findtime  = 600
+maxretry = 3
+backend = auto
+
+[sshd]
+enabled  = true
+filter   = sshd
+action   = iptables[name=SSH, port=ssh, protocol=tcp]
+logpath  = /var/log/auth.log
+maxretry = 3
+
 EOT
-check_returned_code $?
 
-display_message "Updating nfdump configuration"
-cat > /etc/default/nfdump << EOT
-# nfcapd is controlled by nfsen
-nfcapd_start=yes
-EOT
-check_returned_code $?
-
-display_message "Updating nfdump service configuration (init.d)"
-sed -i 's/^DAEMON_ARGS.*/DAEMON_ARGS="-D -l $DATA_BASE_DIR -P $PIDFILE -z -S 7"/' /etc/init.d/nfdump
-check_returned_code $?
-
-display_message "Updating nfdump service configuration (systemd)"
-sed -i 's/^ExecStart.*/ExecStart=\/usr\/bin\/nfcapd -D -l \/var\/cache\/nfdump -P \/var\/run\/nfcapd.pid -p 2055 -z -S 7/' /lib/systemd/system/nfdump.service
-check_returned_code $?
+    display_message "Reloading fail2ban local configuration"
+    /usr/bin/fail2ban-client reload
+    check_returned_code $?
+fi
 
 display_message "Create banner on login"
 /usr/bin/figlet -f lean -c "Kupiki Hotspot" | tr ' _/' ' /' > /etc/ssh/kupiki-banner
@@ -830,11 +884,13 @@ execute_command "service hostapd restart" true "Restarting hostapd"
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
 
-execute_command "service fprobe start" true "Starting fprobe service"
+if [ $NETFLOW_ENABLED = "Y" ]; then
+    execute_command "service fprobe start" true "Starting fprobe service"
 
-execute_command "systemctl daemon-reload" true "Reloading units for systemctl"
+    execute_command "systemctl daemon-reload" true "Reloading units for systemctl"
 
-execute_command "service nfdump start" true "Starting nfdump service"
+    execute_command "service nfdump start" true "Starting nfdump service"
+fi
 
 execute_command "service ssh reload" true "Reload configuration for SSH service"
 
