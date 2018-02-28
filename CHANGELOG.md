@@ -1,3 +1,6 @@
+**v1.8**
+- Add option to allow authentication by the MAC address of the users. A user must be created with its username as the MAC address (11-22-33-44-55-66) and password with the one defined in the line _MAC_AUTHENTICATION_PASSWORD_
+
 **v1.7.2**
 - Extand requested disk space from 500MB to 1GB
 - Add option to define how long logs should be kept 

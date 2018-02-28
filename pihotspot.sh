@@ -44,10 +44,10 @@ DALORADIUS_INSTALL="Y"
 # Enable/Disable Bluetooth
 # Set value to Y or N
 BLUETOOTH_ENABLED="N"
-# Enable/Disable fail2ban
+# Enable/Disable fail2ban to protect server from unwanted access
 # Set value to Y or N
 FAIL2BAN_ENABLED="Y"
-# Enable/Disable Netflow logs
+# Enable/Disable Netflow logs to log all traffic requests. Must be crossed checked with assigned IP in the radius tables
 # Set value to Y or N
 NETFLOW_ENABLED="Y"
 # Define how long Netflow logs will be stored
@@ -56,6 +56,11 @@ NETFLOW_ENABLED="Y"
 # A value of 0 disables the max lifetime limit. If no scale is given, H (hours) are assumed.
 # By default data are stored 365 days (value set to 365d)
 NETFLOW_LOGS_DAYS="365d"
+# Enable/Disable MAC authentication
+# Set value to Y or N
+MAC_AUTHENTICATION_ENABLED="N"
+# Password for MAC authentication. Should be changed.
+MAC_AUTHENTICATION_PASSWORD="123456"
 
 # *************************************
 #
@@ -642,6 +647,15 @@ check_returned_code $?
 display_message "Add firewall allowed port"
 sed -i "150iHS_TCP_PORTS=\"$HOTSPOT_PORT\"" /etc/chilli/defaults
 check_returned_code $?
+
+if [ $MAC_AUTHENTICATION_ENABLED = "Y" ]; then
+    display_message "Configure MAC address authentication (1/2)"
+    sed -i "20iHS_MACAUTH=on" /etc/chilli/defaults
+    check_returned_code $?
+    display_message "Configure MAC address authentication (2/2)"
+    sed -i "21iHS_MACPASSWD=\"$MAC_AUTHENTICATION_PASSWORD\"" /etc/chilli/defaults
+    check_returned_code $?
+fi
 
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
 

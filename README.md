@@ -11,6 +11,8 @@ Once the script is executed, you will get :
     - The portal is served by the high performance web server Nginx
     - The design of the portal can be easily modified for anyone who has knowledge in HTML and Javascript    
 - An authentication process based on freeRadius
+    - User/password authentication
+    - MAC address authentication (optionnal)
 - An interface for freeRadius management
     - daloRadius is installed by default, served by Nginx web server
     - A full management of the hotspot, with batch for user creation, vouchers, NAS, etc.
