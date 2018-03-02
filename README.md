@@ -76,6 +76,22 @@ Screenshots
 <h4 align="center">Daloradius</h4>
 <img src="http://www.pihomeserver.fr/hosting/daloradius.png">
 
+Additionnal application
+=======
+
+For those who want to try another interface with less functionnalities and more bugs, you can try the portal currently in development [here](https://github.com/Kupiki/Kupiki-Hotspot-Admin-Install)
+
+<h4 align="center">Login screen</h4>
+<img src="http://www.pihomeserver.fr/hosting/kupiki/login.png">
+<h4 align="center">Dashboard</h4>
+<img src="http://www.pihomeserver.fr/hosting/kupiki/dashboard.png">
+<h4 align="center">Basic configuration</h4>
+<img src="http://www.pihomeserver.fr/hosting/kupiki/simple.png">
+<h4 align="center">Advanced configuration</h4>
+<img src="http://www.pihomeserver.fr/hosting/kupiki/advanced.png">
+<h4 align="center">Hotspot management</h4>
+<img src="http://www.pihomeserver.fr/hosting/kupiki/mgmt.png">
+
 Support
 =======
 
