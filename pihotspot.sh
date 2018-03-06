@@ -18,10 +18,8 @@ HOTSPOT_IP="192.168.10.1"
 HOTSPOT_HTTPS="N"
 # Network where the hotspot is located
 HOTSPOT_NETWORK="192.168.10.0"
-# Secret word for CoovaChilli
-COOVACHILLI_SECRETKEY="change-me"
 # Secret word for FreeRadius
-FREERADIUS_SECRETKEY="testing123"
+FREERADIUS_SECRETKEY=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
 # WAN interface (the one with Internet - default 'eth0' or long name for Debian 9+)
 WAN_INTERFACE=`ip link show | grep '^[1-9]' | awk -F ':' '{print $2}' | awk '{$1=$1};1' | grep '^e'`
 # LAN interface (the one for the hotspot)
@@ -556,6 +554,10 @@ display_message "Bug fix for SQL dialect once SQL Counters are activated"
 sed -i 's/dialect = \${modules\.sql\.dialect}/dialect = mysql/g' /etc/freeradius/3.0/mods-available/sqlcounter
 check_returned_code $?
 
+display_message "Update of Freeradius secret key"
+sed -i "s/testing123/$FREERADIUS_SECRETKEY/g" /etc/freeradius/3.0/mods-available/sqlcounter
+check_returned_code $?
+
 display_message "Updating inner-tunnel configuration (1)"
 sed -i 's/^[ \t]*-sql/sql/g' /etc/freeradius/3.0/sites-available/inner-tunnel
 check_returned_code $?
@@ -622,6 +624,10 @@ check_returned_code $?
 
 display_message "Configuring CoovaChilli authorized network"
 sed -i "s/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g" /etc/chilli/defaults
+check_returned_code $?
+
+display_message "Removing CoovaChilli secret key"
+sed -i "s/HS_RADSECRET=testing123/HS_RADSECRET=$FREERADIUS_SECRETKEY/g" /etc/chilli/defaults
 check_returned_code $?
 
 display_message "Removing CoovaChilli secret key"
