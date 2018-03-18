@@ -555,7 +555,7 @@ sed -i 's/dialect = \${modules\.sql\.dialect}/dialect = mysql/g' /etc/freeradius
 check_returned_code $?
 
 display_message "Update of Freeradius secret key"
-sed -i "s/testing123/$FREERADIUS_SECRETKEY/g" /etc/freeradius/3.0/mods-available/sqlcounter
+sed -i "s/testing123/$FREERADIUS_SECRETKEY/g" /etc/freeradius/3.0/clients.conf
 check_returned_code $?
 
 display_message "Updating inner-tunnel configuration (1)"

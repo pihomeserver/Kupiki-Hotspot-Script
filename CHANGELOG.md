@@ -1,3 +1,6 @@
+**v1.8.3**
+- Bug : secret key is wrong configured in the freeradius configuration (clients.conf)
+
 **v1.8.2**
 - Issue #88 : generate random key and use it for Freeradius and Coova link
 
