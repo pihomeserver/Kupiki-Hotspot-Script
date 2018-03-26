@@ -13,6 +13,9 @@ MYSQL_PASSWORD="pihotspot"
 HOTSPOT_NAME="pihotspot"
 # IP of the hotspot
 HOTSPOT_IP="192.168.10.1"
+# Wi-fi code country. Use above link to find yours
+# https://www.cisco.com/c/en/us/td/docs/wireless/wcs/3-2/configuration/guide/wcscfg32/wcscod.html
+WIFI_COUNTRY_CODE="FR"
 # Use HTTPS to connect to web portal
 # Set value to Y or N
 HOTSPOT_HTTPS="N"
@@ -453,6 +456,13 @@ iface $LAN_INTERFACE inet static
     network $HOTSPOT_NETWORK
     post-up echo 1 > /proc/sys/net/ipv4/ip_forward
 EOT
+    check_returned_code $?
+fi
+
+execute_command "grep '^country=' /etc/wpa_supplicant/wpa_supplicant.conf" false "Update wifi configuration to add country code"
+if [ $COMMAND_RESULT -ne 0 ]; then
+    display_message "Adding country code to wpa_supplicant"
+    echo "country=$WIFI_COUNTRY_CODE" >> /etc/wpa_supplicant/wpa_supplicant.conf
     check_returned_code $?
 fi
 
