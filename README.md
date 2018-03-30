@@ -23,7 +23,7 @@ Requirements
 ============
 
 What are the requirements ? 
-- A Raspberry Pi 3
+- A Raspberry Pi 3 or 3B+
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course

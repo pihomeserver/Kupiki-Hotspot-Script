@@ -1,3 +1,6 @@
+**v1.8.4**
+- Update : add country code in /etc/wpa_supplicant/wpa_supplicant.conf to make script compatible with Raspberry Pi 3B+
+
 **v1.8.3**
 - Bug : secret key is wrong configured in the freeradius configuration (clients.conf)
 
