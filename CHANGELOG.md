@@ -1,3 +1,6 @@
+**v1.8.5**
+- Add issue template
+
 **v1.8.4**
 - Update : add country code in /etc/wpa_supplicant/wpa_supplicant.conf to make script compatible with Raspberry Pi 3B+
 
