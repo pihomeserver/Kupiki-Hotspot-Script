@@ -79,6 +79,6 @@ For those who want to try another interface with less functionnalities and more 
 Support and contribute
 =======
 
-If you like the extension, you can support the project by sending a [donation via PayPal](paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
+If you like the extension, you can support the project by sending a [donation via PayPal](https://paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
 
 To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
