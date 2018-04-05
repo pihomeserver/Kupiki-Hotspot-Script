@@ -42,22 +42,6 @@ You just have to download the script, edit it to update it's parameters, execute
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`. Open a new session on the Pi and run the following command `tail -f /var/log/pihotspot.log`
 
-Full distro
-====
-
-**Warning**
-**Warning**
-**Warning**
-
-The image is using the script v1.1 on Debian Jessie (not the last Stretch release). So you should have some bugs in it. It's recommanded to use the script instead this image.
-
-If you don't want to install the script yourself, you can download a ready-to-use image with this [link](https://drive.google.com/file/d/0B5CzDtjmXSaySVNPZ1A1VkYtVFk/view?usp=sharing)
-
-Credentials to connect to the pi using **SSH** (not in the hotspot) are user : pi / password : raspbian
-
-One more time : this is not the latest release so you will find bugs that have been already solved
-For hotspot users creation, manage them with daloradius
-
 Then
 =====
 Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
@@ -92,9 +76,9 @@ For those who want to try another interface with less functionnalities and more 
 <h4 align="center">Hotspot management</h4>
 <img src="http://www.pihomeserver.fr/hosting/kupiki/mgmt.png">
 
-Support
+Support and contribute
 =======
 
-Please input your requests or issues in the [GIT repository](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) 
+If you like the extension, you can support the project by sending a [donation via PayPal](paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
 
-Contributions are welcome !
+To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
