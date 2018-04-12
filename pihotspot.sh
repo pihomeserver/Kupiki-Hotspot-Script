@@ -244,15 +244,19 @@ update_package_cache() {
   timestampAsDate=$(date -d @"${timestamp}" "+%b %e")
   today=$(date "+%b %e")
 
+	echo "::: Checking if packages list must be updated"
   if [ ! "${today}" == "${timestampAsDate}" ]; then
     #update package lists
-    echo ":::"
+    echo "::: Updating packages list confirmed "
     if command -v debconf-apt-progress &> /dev/null; then
         $SUDO debconf-apt-progress -- ${UPDATE_PKG_CACHE}
     else
         $SUDO ${UPDATE_PKG_CACHE} &> /dev/null
     fi
+	else
+    echo "::: No need to update packages list"
   fi
+  echo ":::"
 }
 
 notify_package_updates_available() {
