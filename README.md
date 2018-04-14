@@ -43,7 +43,7 @@ You just have to download the script, edit it to update it's parameters, execute
 
 - Download the script with the following command   
 ` git clone https://github.com/pihomeserver/Kupiki-Hotspot-Script.git`
-- Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required) **[Please read the wiki for more help about parameters](https://github.com/pihomeserver/Kupiki-Hotspot-Script/wiki)
+- Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required) **[Please read the wiki for more help about parameters](https://github.com/pihomeserver/Kupiki-Hotspot-Script/wiki)**
 - Execute the script using the following command :
 ` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
 
