@@ -19,6 +19,13 @@ Once the script is executed, you will get :
 
 The installed system have been secured using [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) and is compliant with french laws about free wifi hotspots ([R. 10-13 et R. 10-14 , IV of CPCE](https://www.cdse.fr/wifi-et-conservation-des-donnees))
 
+Support and contribute
+=======
+
+If you like the extension, you can support the project by sending a [donation via PayPal](https://paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
+
+To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
+
 Requirements
 ============
 
@@ -36,7 +43,7 @@ You just have to download the script, edit it to update it's parameters, execute
 
 - Download the script with the following command   
 ` git clone https://github.com/pihomeserver/Kupiki-Hotspot-Script.git`
-- Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required)
+- Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required) **[Please read the wiki for more help about parameters](https://github.com/pihomeserver/Kupiki-Hotspot-Script/wiki)
 - Execute the script using the following command :
 ` sudo chmod +x pihotspot.sh && sudo ./pihotspot.sh `
 
@@ -75,10 +82,3 @@ For those who want to try another interface with less functionnalities and more 
 <img src="http://www.pihomeserver.fr/hosting/kupiki/advanced.png">
 <h4 align="center">Hotspot management</h4>
 <img src="http://www.pihomeserver.fr/hosting/kupiki/mgmt.png">
-
-Support and contribute
-=======
-
-If you like the extension, you can support the project by sending a [donation via PayPal](https://paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
-
-To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
