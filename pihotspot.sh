@@ -70,7 +70,7 @@ MAC_AUTHENTICATION_PASSWORD="123456"
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.7.2"
+KUPIKI_VERSION="1.8.7"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
@@ -605,14 +605,20 @@ check_returned_code $?
 
 display_message "Block access from LAN to WAN except portal"
 cat >> /etc/chilli/up.sh << EOF
-LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
-ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
-if [ \$? -ne 0 ]
-then
-    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
-    ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
-fi
+LOCAL_IP=`ifconfig $HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
+LOCAL_LAN=`ip -o -f inet addr show | grep $HS_WANIF | awk '/scope global/ {print $4}'`
+ipt -I FORWARD 1 -i $TUNTAP -d $LOCAL_LAN -j REJECT
+ipt -I INPUT 1 -i $TUNTAP -d $LOCAL_IP -j REJECT
 EOF
+# cat >> /etc/chilli/up.sh << EOF
+# LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
+# ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+# if [ \$? -ne 0 ]
+# then
+#     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
+#     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
+# fi
+# EOF
 
 display_message "Activating CoovaChilli"
 sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
