@@ -1,3 +1,6 @@
+**v1.8.7**
+- Issue #91 : block access to local lan via 2 iptables rules
+
 **v1.8.6**
 - Issue #100 : add trace for the **_apt-get update_** command
 
