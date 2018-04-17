@@ -1,3 +1,9 @@
+**v1.8.8**
+- Change iptables rules from REJECT to DROP to avoid easy discovery of the local network
+- Add an option (useless for now) to install web frontend of Kupiki. Default to Y
+- Update MariadDB authentication plugin request by the Kupiki Admin interface
+- Bug fix : issue with the update of repositories. Now it's forced.
+
 **v1.8.7**
 - Issue #91 : block access to local lan via 2 iptables rules
 

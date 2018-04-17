@@ -62,6 +62,9 @@ NETFLOW_LOGS_DAYS="365d"
 MAC_AUTHENTICATION_ENABLED="N"
 # Password for MAC authentication. Should be changed.
 MAC_AUTHENTICATION_PASSWORD="123456"
+# Install web frontend of Kupiki Hotspot
+# Set value to Y or N
+INSTALL_KUPIKI_ADMIN=Y
 
 # *************************************
 #
@@ -70,7 +73,7 @@ MAC_AUTHENTICATION_PASSWORD="123456"
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.8.7"
+KUPIKI_VERSION="1.8.8"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
@@ -240,22 +243,12 @@ verifyFreeDiskSpace() {
 }
 
 update_package_cache() {
-  timestamp=$(stat -c %Y ${PKG_CACHE})
-  timestampAsDate=$(date -d @"${timestamp}" "+%b %e")
-  today=$(date "+%b %e")
-
-	echo "::: Checking if packages list must be updated"
-  if [ ! "${today}" == "${timestampAsDate}" ]; then
-    #update package lists
-    echo "::: Updating packages list confirmed "
-    if command -v debconf-apt-progress &> /dev/null; then
-        $SUDO debconf-apt-progress -- ${UPDATE_PKG_CACHE}
-    else
-        $SUDO ${UPDATE_PKG_CACHE} &> /dev/null
-    fi
+	echo "::: Updating packages list"
+	if command -v debconf-apt-progress &> /dev/null; then
+			$SUDO debconf-apt-progress -- ${UPDATE_PKG_CACHE}
 	else
-    echo "::: No need to update packages list"
-  fi
+			$SUDO ${UPDATE_PKG_CACHE} &> /dev/null
+	fi
   echo ":::"
 }
 
@@ -435,6 +428,25 @@ notify_package_updates_available
 
 download_all_sources
 
+if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
+
+	display_message "Creating Kupiki Admin folder for the database"
+	mkdir /var/local/kupiki
+	check_returned_code $?
+
+	display_message "Changing rights of the folder"
+	chmod 777 /var/local/kupiki
+	check_returned_code $?
+
+	display_message "Updating authentication plugin"
+	mariadb -u root -p$MYSQL_PASSWORD << EOT
+use mysql;
+update user set authentication_string=password('$MYSQL_PASSWORD'), plugin='mysql_native_password' where user='root';
+flush privileges;
+EOT
+  check_returned_code $?
+fi
+
 execute_command "service mariadb restart" true "Starting MySql service"
 
 execute_command "grep $WAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($WAN_INTERFACE)"
@@ -604,21 +616,12 @@ echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh
 check_returned_code $?
 
 display_message "Block access from LAN to WAN except portal"
-cat >> /etc/chilli/up.sh << EOF
-LOCAL_IP=`ifconfig $HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
-LOCAL_LAN=`ip -o -f inet addr show | grep $HS_WANIF | awk '/scope global/ {print $4}'`
-ipt -I FORWARD 1 -i $TUNTAP -d $LOCAL_LAN -j REJECT
-ipt -I INPUT 1 -i $TUNTAP -d $LOCAL_IP -j REJECT
-EOF
-# cat >> /etc/chilli/up.sh << EOF
-# LOCAL_IP=\`ifconfig \$HS_WANIF | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'\`
-# ipt -C INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
-# if [ \$? -ne 0 ]
-# then
-#     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -p tcp -m tcp --dport $HOTSPOT_PORT -j ACCEPT
-#     ipt -A INPUT -i \$TUNTAP -d \$LOCAL_IP -j DROP
-# fi
-# EOF
+echo '
+LOCAL_IP=`ifconfig $HS_WANIF | grep -Eo "inet (addr:)?([0-9]*\.){3}[0-9]*" | grep -Eo "([0-9]*\.){3}[0-9]*" | grep -v "127.0.0.1"`
+LOCAL_LAN=`ip -o -f inet addr show | grep $HS_WANIF | awk '\''/scope global/ {print $4}'\''`
+ipt -I FORWARD 1 -i $TUNTAP -d $LOCAL_LAN -j DROP
+ipt -I INPUT 1 -i $TUNTAP -d $LOCAL_IP -j DROP
+' >> /etc/chilli/up.sh
 
 display_message "Activating CoovaChilli"
 sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
@@ -733,9 +736,7 @@ if [ $DALORADIUS_INSTALL = "Y" ]; then
     display_message "Creating users privileges for localhost"
     echo "GRANT ALL ON radius.* to 'radius'@'localhost';" > /tmp/grant.sql
     check_returned_code $?
-    #display_message "Creating users privileges for 127.0.0.1"
-    #echo "GRANT ALL ON radius.* to 'radius'@'127.0.0.1';" >> /tmp/grant.sql
-    #check_returned_code $?
+
     display_message "Granting users privileges"
     mysql -u root -p$MYSQL_PASSWORD < /tmp/grant.sql
     check_returned_code $?
