@@ -1,3 +1,6 @@
+**v1.8.9**
+- Add controls to validate some parameters before starting the installation
+
 **v1.8.8**
 - Change iptables rules from REJECT to DROP to avoid easy discovery of the local network
 - Add an option (useless for now) to install web frontend of Kupiki. Default to Y

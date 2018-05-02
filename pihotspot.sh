@@ -73,7 +73,7 @@ INSTALL_KUPIKI_ADMIN=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.8.8"
+KUPIKI_VERSION="1.8.9"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
@@ -107,6 +107,13 @@ PKG_UPGRADE="${PKG_MANAGER} --yes upgrade"
 #PKG_DIST_UPGRADE="apt dist-upgrade -y --force-yes"
 PKG_DIST_UPGRADE="apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages"
 PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
+
+WAN_INTERFACE_IP=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 10`
+WAN_INTERFACE_IP_MASK=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 13`
+
+IFS=. read -r i1 i2 i3 i4 <<< "$WAN_INTERFACE_IP"
+IFS=. read -r m1 m2 m3 m4 <<< "$WAN_INTERFACE_IP_MASK"
+WAN_INTERFACE_NETWORK_MASK=`printf "%d.%d.%d.%d\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))" "$((i4 & m4))"`
 
 check_returned_code() {
     RETURNED_CODE=$@
@@ -335,7 +342,55 @@ install_dependent_packages() {
   fi
 }
 
+valid_ip_address() {
+    local typeChk=$1
+    local ip=$2
+    local stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        if [ $typeChk = "IP" ]; then
+            [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+                && ${ip[2]} -le 255 && ${ip[3]} -le 255 && ${ip[3]} -ne 0 ]]
+            stat=$?
+        else
+            [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+                && ${ip[2]} -le 255 && ${ip[3]} -eq 0 ]]
+            stat=$?
+        fi
+    fi
+    return $stat
+}
+
 check_root
+
+if valid_ip_address 'NETWORK' $HOTSPOT_NETWORK && valid_ip_address 'IP' $HOTSPOT_IP; then
+    display_message "Checking HOTSPOT_NETWORK and HOTSPOT_IP parameters : OK"
+else
+    display_message ""
+    display_message "Incorrect HOTSPOT_NETWORK and HOTSPOT_IP parameters"
+    display_message "HOTSPOT_NETWORK must be a network format (ex: 192.168.1.0) and HOTSPOT_IP must be an ip format (ex: 192.168.1.10)"
+    exit 1;
+fi
+
+if [ $HOTSPOT_IP != $WAN_INTERFACE_IP ]; then
+    display_message "Checking that HOTSPOT_IP is not the same than the WAN_INTERFACE : OK"
+else
+    display_message ""
+    display_message "HOTSPOT_IP is the same than the WAN_INTERFACE. They must be different."
+    exit 1;
+fi
+
+if [ $HOTSPOT_NETWORK != $WAN_INTERFACE_NETWORK_MASK ]; then
+    display_message "Checking that HOTSPOT_NETWORK is not the same than the WAN_INTERFACE network : OK"
+else
+    display_message ""
+    display_message "HOTSPOT_NETWORK parameter is the same than the WAN_INTERFACE network. They must be different."
+    exit 1;
+fi
 
 DEBIAN_VERSION=`cat /etc/*-release | grep VERSION_ID | awk -F= '{print $2}' | sed -e 's/^"//' -e 's/"$//'`
 if [[ $DEBIAN_VERSION -ne 9 ]];then
