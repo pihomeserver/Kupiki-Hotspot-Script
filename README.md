@@ -1,3 +1,5 @@
+[![Slack](https://img.shields.io/badge/slack-kupiki--tools-blue.svg)](https://kupiki-tools.slack.com) ![Stars](https://img.shields.io/github/stars/pihomeserver/kupiki-hotspot-script.svg?style=social&label=Star) [![Donate](https://img.shields.io/badge/%24-Donate-brightgreen.svg)](https://paypal.me/PiHomeServer)
+
 What is Kupiki Hotspot
 ==================
 
@@ -60,25 +62,31 @@ The exact address will be displayed at the end of the script execution.
 Screenshots
 =======
 
-<h4 align="center">Connexion screen</h4>
-<img src="http://www.pihomeserver.fr/hosting/portalConnect.png">
-<h4 align="center">Successful connexion</h4>
-<img src="http://www.pihomeserver.fr/hosting/portalConnected.png">
-<h4 align="center">Daloradius</h4>
-<img src="http://www.pihomeserver.fr/hosting/daloradius.png">
+#### Connexion screen
+![portalConnect](http://www.pihomeserver.fr/hosting/portalConnect.png)
+
+#### Successful connexion
+![portalConnected](http://www.pihomeserver.fr/hosting/portalConnected.png)
+
+#### Daloradius
+![daloradius](http://www.pihomeserver.fr/hosting/daloradius.png)
 
 Additionnal application
 =======
 
-For those who want to try another interface with less functionnalities and more bugs, you can try the portal currently in development [here](https://github.com/Kupiki/Kupiki-Hotspot-Admin-Install)
+For those who want to try another interface (in english of french only) with less functionnalities and more bugs, you can try the portal currently in development [here](https://github.com/Kupiki/Kupiki-Hotspot-Admin-Install)
 
-<h4 align="center">Login screen</h4>
-<img src="http://www.pihomeserver.fr/hosting/kupiki/login.png">
-<h4 align="center">Dashboard</h4>
-<img src="http://www.pihomeserver.fr/hosting/kupiki/dashboard.png">
-<h4 align="center">Basic configuration</h4>
-<img src="http://www.pihomeserver.fr/hosting/kupiki/simple.png">
-<h4 align="center">Advanced configuration</h4>
-<img src="http://www.pihomeserver.fr/hosting/kupiki/advanced.png">
-<h4 align="center">Hotspot management</h4>
-<img src="http://www.pihomeserver.fr/hosting/kupiki/mgmt.png">
+#### Login screen
+![login](http://www.pihomeserver.fr/hosting/kupiki/login.png)
+
+#### Dashboard
+![dashboard](http://www.pihomeserver.fr/hosting/kupiki/dashboard.png)
+
+#### Basic configuration
+![simple](http://www.pihomeserver.fr/hosting/kupiki/simple.png)
+
+#### Advanced configuration
+![advanced](http://www.pihomeserver.fr/hosting/kupiki/advanced.png)
+
+#### Hotspot management
+![mgmt](http://www.pihomeserver.fr/hosting/kupiki/mgmt.png)
