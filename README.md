@@ -59,6 +59,16 @@ The exact address will be displayed at the end of the script execution.
 
 **Do not try to connect to daloRadius throught your new hotspot network**
 
+Updates
+=======
+
+Since version 2.0.0 (no update for previous versions), you can get and apply latest updates on your system.
+Go in _/etc/kupiki_ folder and run as _root_ :
+```
+/etc/kupiki/kupiki_updater.sh
+```
+Feel free to add it in a cron job to get automatic updates
+
 Screenshots
 =======
 

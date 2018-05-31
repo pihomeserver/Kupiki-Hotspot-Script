@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
+# Autoupdating based on https://stackoverflow.com/a/44528451/3791371
 set -fb
 
-THISDIR=$(cd "$(dirname "$0")" ; pwd)
-MY_NAME=$(basename "$0")
-FILE_TO_FETCH_URL="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
-EXISTING_SHELL_SCRIPT="${THISDIR}/kupiki_updater.sh"
-EXECUTABLE_SHELL_SCRIPT="${THISDIR}/.kupiki_updater.sh"
-
+CURRENT_PWD=$(cd "$(dirname "$0")" ; pwd)
+CURRENT_NAME=$(basename "$0")
+KUPIKI_UPDATER_URL="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
+EXISTING_SHELL_SCRIPT="${CURRENT_PWD}/kupiki_updater.sh"
+EXECUTABLE_SHELL_SCRIPT="${CURRENT_PWD}/.kupiki_updater.sh"
 LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
+
+declare -a KUPIKI_UPDATES=()
+
+upgrade_2.0.1() {
+  :
+}
 
 check_returned_code() {
     RETURNED_CODE=$@
@@ -63,13 +69,17 @@ check_root() {
   fi
 }
 
+get_current_kupiki_version() {
+  KUPIKI_CURRENT_VERSION=`cat /etc/kupiki/version`
+}
+
 check_requirements() {
   if [ ! -e /etc/kupiki/version ]; then
     display_message "Unable to find current version. Please reinstall Kupiki Hotspot"
     exit 1
   fi
   display_message "Getting current installed version"
-  KUPIKI_CURRENT_VERSION=`cat /etc/kupiki/version`
+  get_current_kupiki_version
 
   if [ $KUPIKI_CURRENT_VERSION \< "2.0.0" ]; then
     display_message "Only installation greater than 2.0.0 can be updated"
@@ -78,12 +88,12 @@ check_requirements() {
 }
 
 get_remote_file() {
-  readonly REQUEST_URL=$1
-  readonly OUTPUT_FILENAME=$2
-  readonly TEMP_FILE="${THISDIR}/tmp.file"
+  REQUEST_URL=$1
+  OUTPUT_FILENAME=$2
+  TEMP_FILE="${CURRENT_PWD}/tmp.file"
 
   if [ -n "$(which wget)" ]; then
-    $(wget -O "${TEMP_FILE}" "$REQUEST_URL" 2>&1)
+    $(wget --quiet -O "${TEMP_FILE}" "$REQUEST_URL" 2>&1)
     if [[ $? -eq 0 ]]; then
       mv "${TEMP_FILE}" "${OUTPUT_FILENAME}"
       chmod 700 "${OUTPUT_FILENAME}"
@@ -94,25 +104,26 @@ get_remote_file() {
 }
 
 function clean_up() {
-  # clean up code (if required) that has to execute every time here
-  echo
+  :
 }
+
 function self_clean_up() {
   rm -f "${EXECUTABLE_SHELL_SCRIPT}"
 }
 
 function update_self_and_invoke() {
-  get_remote_file "${FILE_TO_FETCH_URL}" "${EXECUTABLE_SHELL_SCRIPT}"
+  get_remote_file "${KUPIKI_UPDATER_URL}" "${EXECUTABLE_SHELL_SCRIPT}"
   if [ $? -ne 0 ]; then
     cp "${EXISTING_SHELL_SCRIPT}" "${EXECUTABLE_SHELL_SCRIPT}"
   fi
   exec "${EXECUTABLE_SHELL_SCRIPT}" "$@"
 }
-function main() {
-  cp "${EXECUTABLE_SHELL_SCRIPT}" "${EXISTING_SHELL_SCRIPT}"
-  # your code here
-  check_root
 
+function copy_file() {
+  cp "${EXECUTABLE_SHELL_SCRIPT}" "${EXISTING_SHELL_SCRIPT}"
+}
+
+function main() {
   prepare_logfile
 
   check_requirements
@@ -129,18 +140,34 @@ function main() {
     display_message "Please input a new issue on GitHub to solve the problem"
     exit 1
   fi
+
+  display_message ""
+  for i in "${!KUPIKI_UPDATES[@]}"; do
+    if [ ${KUPIKI_CURRENT_VERSION} \< ${KUPIKI_UPDATES[$i]} ]; then
+      display_message "Upgrading to version "${KUPIKI_UPDATES[$i]}
+      display_message ""
+      UPGRADE_FUNCTION="upgrade_"${KUPIKI_UPDATES[$i]}
+      ${UPGRADE_FUNCTION};
+      echo ${KUPIKI_UPDATES[$i]} > /etc/kupiki/version
+      get_current_kupiki_version
+    fi
+  done
 }
 
-if [[ $MY_NAME = \.* ]]; then
-  echo "Execute - $MY_NAME"
-  # invoke real main program
-  trap "clean_up; self_clean_up" EXIT
+if [[ $# -eq 1 && $1 = "noupdate" ]]; then
+  check_root
+
   main "$@"
 else
-  echo "Update - $MY_NAME"
-  # update myself and invoke updated version
-  trap clean_up EXIT
-  update_self_and_invoke "$@"
+  if [[ $CURRENT_NAME = \.* ]]; then
+    display_message "Running updater"
+    trap "check_root; clean_up; self_clean_up" EXIT
+    copy_file
+    main "$@"
+  else
+    display_message "Auto updating of the script "
+    trap "check_root; clean_up" EXIT
+    update_self_and_invoke "$@"
+  fi
 fi
-
 

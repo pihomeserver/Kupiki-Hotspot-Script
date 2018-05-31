@@ -1,3 +1,8 @@
+**v2.0.0**
+- Issue #115 : remove error if /var/local/kupiki exists
+- New major release
+- Integration of an updater process. Available only for release greater than 2.0.0
+
 **v1.8.9**
 - Add controls to validate some parameters before starting the installation
 

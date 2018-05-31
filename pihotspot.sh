@@ -3,14 +3,14 @@
 # PLEASE EDIT NEXT LINES TO DEFINE YOUR OWN CONFIGURATION
 
 # Name of the log file
-LOGNAME="pihotspot.log"
+LOGNAME="kupiki_hotspot.log"
 # Path where the logfile will be stored
 # be sure to add a / at the end of the path
 LOGPATH="/var/log/"
 # Password for user root (MySql/MariaDB not system)
 MYSQL_PASSWORD="pihotspot"
 # Name of the hotspot that will be visible for users/customers
-HOTSPOT_NAME="pihotspot"
+HOTSPOT_NAME="kupikihotspot"
 # IP of the hotspot
 HOTSPOT_IP="192.168.10.1"
 # Wi-fi code country. Use above link to find yours
@@ -47,7 +47,7 @@ DALORADIUS_INSTALL="Y"
 BLUETOOTH_ENABLED="N"
 # Enable/Disable fail2ban to protect server from unwanted access
 # Set value to Y or N
-FAIL2BAN_ENABLED="Y"
+FAIL2BAN_ENABLED="N"
 # Enable/Disable Netflow logs to log all traffic requests. Must be crossed checked with assigned IP in the radius tables
 # Set value to Y or N
 NETFLOW_ENABLED="Y"
@@ -60,11 +60,14 @@ NETFLOW_LOGS_DAYS="365d"
 # Enable/Disable MAC authentication
 # Set value to Y or N
 MAC_AUTHENTICATION_ENABLED="N"
-# Password for MAC authentication. Should be changed.
+# Password for MAC authentication. Could/Should be changed within the web administration interface
 MAC_AUTHENTICATION_PASSWORD="123456"
 # Install web frontend of Kupiki Hotspot
 # Set value to Y or N
 INSTALL_KUPIKI_ADMIN=Y
+# Install Cron job for the hotspot updater. Will be executed every sunday at 8am (system time)
+# Set value to Y or N
+ADD_CRON_UPDATER=Y
 
 # *************************************
 #
@@ -73,12 +76,14 @@ INSTALL_KUPIKI_ADMIN=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="1.8.9"
+KUPIKI_VERSION="2.0.0"
+# Updater location
+KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
 HOTSPOT_PORT="80"
 HOTSPOT_PROTOCOL="http:\/\/"
 # If we need HTTPS support, change port and protocol
-if [ $HOTSPOT_HTTPS = "Y" ]; then
+if [ "$HOTSPOT_HTTPS" = "Y" ]; then
     HOTSPOT_PORT="443"
     HOTSPOT_PROTOCOL="https:\/\/"
 fi
@@ -365,7 +370,37 @@ valid_ip_address() {
     return $stat
 }
 
+get_updater() {
+  display_message "Checking for updater"
+  if [ -e /etc/kupiki/kupiki_updater.sh ]; then
+    display_message "Updater already exists. It will auto update itself"
+  else
+    display_message "Creating /etc/kupiki"
+    mkdir -p /etc/kupiki && chmod 700 /etc/kupiki
+    check_returned_code $?
+
+    display_message "Updater not found. Downloading latest version of the updater"
+    if ! wget --quiet --output-document="/etc/kupiki/kupiki_updater.sh" $KUPIKI_UPDATER_ARCHIVE ; then
+      display_message "Error while trying to wget new version from ${KUPIKI_UPDATER_ARCHIVE}"
+      exit 1
+    fi
+
+    display_message "Changing access rights"
+    chmod 700 /etc/kupiki/kupiki_updater.sh
+    check_returned_code $?
+  fi
+
+  if [ $ADD_CRON_UPDATER = "Y" ]; then
+    execute_command "grep kupiki_updater /etc/crontab" false "Checking for existing cron job"
+    if [ $COMMAND_RESULT -ne 0 ]; then
+      echo "0 6 * * 0 root /etc/kupiki/kupiki_updater.sh" >> /etc/crontab
+    fi
+  fi
+}
+
 check_root
+
+get_updater
 
 if valid_ip_address 'NETWORK' $HOTSPOT_NETWORK && valid_ip_address 'IP' $HOTSPOT_IP; then
     display_message "Checking HOTSPOT_NETWORK and HOTSPOT_IP parameters : OK"
@@ -486,7 +521,7 @@ download_all_sources
 if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
 
 	display_message "Creating Kupiki Admin folder for the database"
-	mkdir /var/local/kupiki
+	mkdir -p /var/local/kupiki
 	check_returned_code $?
 
 	display_message "Changing rights of the folder"
@@ -653,6 +688,12 @@ check_returned_code $?
 
 display_message "Updating freeradius default configuration (2)"
 sed -i 's/^#[ \t]*sql$/sql/g' /etc/freeradius/3.0/sites-available/default
+check_returned_code $?
+
+display_message "Activating COA support in Freeradius"
+ln -s /etc/freeradius/3.0/sites-available/coa /etc/freeradius/3.0/sites-enabled
+check_returned_code $?
+chown -R freerad:freerad /etc/freeradius/3.0/sites-enabled/coa
 check_returned_code $?
 
 execute_command "freeradius -C" true "Checking freeradius configuration"
@@ -998,6 +1039,12 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     # Do not exit to display connection information
     #exit 1
 fi
+
+display_message "Creating backend script folder"
+mkdir -p /etc/kupiki && chmod 700 /etc/kupiki
+
+display_message "Creating version control file"
+echo $KUPIKI_VERSION > /etc/kupiki/version
 
 # Last message to display once installation ended successfully
 
