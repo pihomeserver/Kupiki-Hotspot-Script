@@ -12,7 +12,7 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=()
+declare -a KUPIKI_UPDATES=("2.0.1")
 
 upgrade_2.0.1() {
   :
@@ -139,6 +139,12 @@ function main() {
     display_message "Ooops seems you have a newer version of the script than the latest one on GitHub"
     display_message "Please input a new issue on GitHub to solve the problem"
     exit 1
+  fi
+
+  if [ ${KUPIKI_LATEST_VERSION} = ${KUPIKI_CURRENT_VERSION} ]; then
+    display_message ""
+    display_message "You already have the latest version. Nothing to do."
+    exit 0
   fi
 
   display_message ""

@@ -1,4 +1,9 @@
+**v2.0.1**
+- Update the updater script
+- Dummy version to validate updater process
+
 **v2.0.0**
+- Issue #116 : remove coa file for Freeradius configuration
 - Issue #115 : remove error if /var/local/kupiki exists
 - New major release
 - Integration of an updater process. Available only for release greater than 2.0.0
