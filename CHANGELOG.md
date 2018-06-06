@@ -1,3 +1,7 @@
+**v2.0.2**
+- Issue #116 / #87 : reactivate COA support on port 1700 to avoid ports conflicts
+- Add _nfdump_ package
+
 **v2.0.1**
 - Update the updater script
 - Dummy version to validate updater process

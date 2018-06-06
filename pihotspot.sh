@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.1"
+KUPIKI_VERSION="2.0.2"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -511,7 +511,7 @@ fi
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
 if [ $NETFLOW_ENABLED = "Y" ]; then
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe nfdump
 fi
 
 notify_package_updates_available
@@ -691,7 +691,23 @@ sed -i 's/^#[ \t]*sql$/sql/g' /etc/freeradius/3.0/sites-available/default
 check_returned_code $?
 
 display_message "Activating COA support in Freeradius"
-ln -s /etc/freeradius/3.0/sites-available/coa /etc/freeradius/3.0/sites-enabled
+rm -f /etc/freeradius/3.0/sites-enabled/coa
+echo '
+listen {
+	type = coa
+	ipaddr = *
+	port = 1700
+	virtual_server = coa
+}
+server coa {
+	recv-coa {
+		suffix
+		ok
+	}
+	send-coa {
+		ok
+	}
+}' > /etc/freeradius/3.0/sites-enabled/coa
 check_returned_code $?
 chown -R freerad:freerad /etc/freeradius/3.0/sites-enabled/coa
 check_returned_code $?

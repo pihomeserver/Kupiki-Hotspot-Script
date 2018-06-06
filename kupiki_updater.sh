@@ -12,10 +12,41 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2")
 
 upgrade_2.0.1() {
   :
+}
+
+upgrade_2.0.2() {
+  execute_command "service freeradius stop" true "Stoping freeradius service"
+  display_message "Activating COA support in Freeradius"
+  rm -f /etc/freeradius/3.0/sites-enabled/coa
+  echo '
+  listen {
+    type = coa
+    ipaddr = *
+    port = 1700
+    virtual_server = coa
+  }
+  server coa {
+    recv-coa {
+      suffix
+      ok
+    }
+    send-coa {
+      ok
+    }
+  }' > /etc/freeradius/3.0/sites-enabled/coa
+  check_returned_code $?
+  chown -R freerad:freerad /etc/freeradius/3.0/sites-enabled/coa
+  check_returned_code $?
+  execute_command "service freeradius start" true "Starting freeradius service"
+
+  if [ -e /etc/init.d/fprobe ]; then
+    display_message "Installing nfdump"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe nfdump
+  fi
 }
 
 check_returned_code() {
@@ -165,14 +196,16 @@ if [[ $# -eq 1 && $1 = "noupdate" ]]; then
 
   main "$@"
 else
+  check_root
+
   if [[ $CURRENT_NAME = \.* ]]; then
     display_message "Running updater"
-    trap "check_root; clean_up; self_clean_up" EXIT
+    trap "clean_up; self_clean_up" EXIT
     copy_file
     main "$@"
   else
     display_message "Auto updating of the script "
-    trap "check_root; clean_up" EXIT
+    trap "clean_up" EXIT
     update_self_and_invoke "$@"
   fi
 fi
