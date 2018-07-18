@@ -1,4 +1,4 @@
-[![Slack](https://img.shields.io/badge/slack-kupiki--tools-blue.svg)](https://kupiki-tools.slack.com) ![Stars](https://img.shields.io/github/stars/pihomeserver/kupiki-hotspot-script.svg?style=social&label=Star) [![Donate](https://img.shields.io/badge/%24-Donate-brightgreen.svg)](https://paypal.me/PiHomeServer)
+[![Slack](https://img.shields.io/badge/slack-kupiki--tools-blue.svg)](https://kupiki-tools.slack.com) ![Stars](https://img.shields.io/github/stars/pihomeserver/kupiki-hotspot-script.svg?style=social&label=Star) [![Patreon](https://img.shields.io/badge/%24-Donate-brightgreen.svg)](https://www.patreon.com/pihomeserver)
 
 What is Kupiki Hotspot
 ==================
@@ -21,10 +21,13 @@ Once the script is executed, you will get :
 
 The installed system have been secured using [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) and is compliant with french laws about free wifi hotspots ([R. 10-13 et R. 10-14 , IV of CPCE](https://www.cdse.fr/wifi-et-conservation-des-donnees))
 
-Support and contribute
+Support my work
 =======
 
-If you like the extension, you can support the project by sending a [donation via PayPal](https://paypal.me/PiHomeServer) to [me](https://github.com/pihomeserver).
+Love Kupiki Hotspot or want to support it? Check out my [patreon page](https://www.patreon.com/pihomeserver) :)
+
+![patreonLink](http://www.pihomeserver.fr/hosting/patreon/patreon_1.png)
+
 
 To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
 
