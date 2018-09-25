@@ -1,3 +1,6 @@
+**v2.0.3**
+- Issue #133 : Remove default frontend installation due to mariadb issue
+
 **v2.0.2**
 - Issue #116 / #87 : reactivate COA support on port 1700 to avoid ports conflicts
 - Add _nfdump_ package

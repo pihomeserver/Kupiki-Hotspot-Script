@@ -53,7 +53,7 @@ FAIL2BAN_ENABLED="N"
 NETFLOW_ENABLED="Y"
 # Define how long Netflow logs will be stored
 # Sets the max life time for files generated for Netflow monitoring. The supplied maxlife_time accepts values such as 31d, 240H 1.5d etc.
-# Accpeted time scales are w (weeks) d (days) H (hours).
+# Accepted time scales are w (weeks) d (days) H (hours).
 # A value of 0 disables the max lifetime limit. If no scale is given, H (hours) are assumed.
 # By default data are stored 365 days (value set to 365d)
 NETFLOW_LOGS_DAYS="365d"
@@ -64,7 +64,7 @@ MAC_AUTHENTICATION_ENABLED="N"
 MAC_AUTHENTICATION_PASSWORD="123456"
 # Install web frontend of Kupiki Hotspot
 # Set value to Y or N
-INSTALL_KUPIKI_ADMIN=Y
+INSTALL_KUPIKI_ADMIN=N
 # Install Cron job for the hotspot updater. Will be executed every sunday at 8am (system time)
 # Set value to Y or N
 ADD_CRON_UPDATER=Y
@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.2"
+KUPIKI_VERSION="2.0.3"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
