@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.3"
+KUPIKI_VERSION="2.0.4"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -517,25 +517,6 @@ fi
 notify_package_updates_available
 
 download_all_sources
-
-if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
-
-	display_message "Creating Kupiki Admin folder for the database"
-	mkdir -p /var/local/kupiki
-	check_returned_code $?
-
-	display_message "Changing rights of the folder"
-	chmod 777 /var/local/kupiki
-	check_returned_code $?
-
-	display_message "Updating authentication plugin"
-	mariadb -u root -p$MYSQL_PASSWORD << EOT
-use mysql;
-update user set authentication_string=password('$MYSQL_PASSWORD'), plugin='mysql_native_password' where user='root';
-flush privileges;
-EOT
-  check_returned_code $?
-fi
 
 execute_command "service mariadb restart" true "Starting MySql service"
 
@@ -1028,6 +1009,25 @@ check_returned_code $?
 display_message ""
 sed -i "s?^Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
 check_returned_code $?
+
+# if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
+
+	display_message "Creating Kupiki Admin folder for the database"
+	mkdir -p /var/local/kupiki
+	check_returned_code $?
+
+	display_message "Changing rights of the folder"
+	chmod 777 /var/local/kupiki
+	check_returned_code $?
+
+	display_message "Updating authentication plugin"
+	mariadb -u root -p$MYSQL_PASSWORD << EOT
+use mysql;
+update user set authentication_string=password('$MYSQL_PASSWORD'), plugin='mysql_native_password' where user='root';
+flush privileges;
+EOT
+  check_returned_code $?
+# fi
 
 execute_command "service freeradius start" true "Starting freeradius service"
 

@@ -1,3 +1,6 @@
+**v2.0.4**
+- Add instruction block to prepare installation of the new frontend
+
 **v2.0.3**
 - Issue #133 : Remove default frontend installation due to mariadb issue
 
