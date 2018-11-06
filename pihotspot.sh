@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.4"
+KUPIKI_VERSION="2.0.5"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -96,8 +96,8 @@ COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
 DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
 # Captive Portal URL
 HOTSPOTPORTAL_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal.git"
-# Kupiki Logger URL
-KUPIKI_LOGGER_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Logger.git"
+# Kupiki Admin Web UI URL
+KUPIKI_WEBUI_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Admin-Install.git"
 # Haserl URL
 HASERL_URL="http://downloads.sourceforge.net/project/haserl/haserl-devel/haserl-0.9.35.tar.gz"
 # Haserl archive name based on the URL (keep the same version)
@@ -284,6 +284,8 @@ download_all_sources() {
   execute_command "cd /usr/src && rm -rf coova-chilli*" true "Removing any previous sources of CoovaChilli project"
 
   execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
+
+  execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Web UI project"
 
   if [ $HASERL_INSTALL = "Y" ]; then
 
@@ -1010,24 +1012,31 @@ display_message ""
 sed -i "s?^Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
 check_returned_code $?
 
-# if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
+display_message "Creating Kupiki Admin folder for the database"
+mkdir -p /var/local/kupiki
+check_returned_code $?
 
-	display_message "Creating Kupiki Admin folder for the database"
-	mkdir -p /var/local/kupiki
-	check_returned_code $?
+display_message "Changing rights of the folder"
+chmod 777 /var/local/kupiki
+check_returned_code $?
 
-	display_message "Changing rights of the folder"
-	chmod 777 /var/local/kupiki
-	check_returned_code $?
-
-	display_message "Updating authentication plugin"
-	mariadb -u root -p$MYSQL_PASSWORD << EOT
+display_message "Updating authentication plugin"
+mariadb -u root -p$MYSQL_PASSWORD << EOT
 use mysql;
 update user set authentication_string=password('$MYSQL_PASSWORD'), plugin='mysql_native_password' where user='root';
 flush privileges;
 EOT
-  check_returned_code $?
-# fi
+check_returned_code $?
+
+if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
+    display_message "Going to webui folder"
+    cd /usr/src/webui
+    check_returned_code $?
+
+    display_message "Installing the WEB UI"
+    chmod +x install_kupiki_admin.sh && ./install_kupiki_admin.sh 
+    check_returned_code $?
+fi
 
 execute_command "service freeradius start" true "Starting freeradius service"
 

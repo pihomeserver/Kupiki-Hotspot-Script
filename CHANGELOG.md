@@ -1,3 +1,6 @@
+**v2.0.5**
+- Add WEB UI Admin installation capability from the main script
+
 **v2.0.4**
 - Add instruction block to prepare installation of the new frontend
 

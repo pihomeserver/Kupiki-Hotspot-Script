@@ -12,7 +12,11 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5")
+
+upgrade_2.0.5() {
+  :
+}
 
 upgrade_2.0.4() {
 	display_message "Creating Kupiki Admin folder for the database"
