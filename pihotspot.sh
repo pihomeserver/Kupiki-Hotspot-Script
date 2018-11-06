@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.5"
+KUPIKI_VERSION="2.0.6"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -988,29 +988,33 @@ EOT
     check_returned_code $?
 fi
 
-display_message "Create banner on login"
-/usr/bin/figlet -f lean -c "Kupiki Hotspot" | tr ' _/' ' /' > /etc/ssh/kupiki-banner
-check_returned_code $?
+if [ -d "/etc/ssh" ]; then
+    display_message "Create banner on login"
+    /usr/bin/figlet -f lean -c "Kupiki Hotspot" | tr ' _/' ' /' > /etc/ssh/kupiki-banner
+    check_returned_code $?
 
-display_message "Append script version to the banner"
-echo "
+    display_message "Append script version to the banner"
+    echo "
 
-Kupiki Hotspot - Version $KUPIKI_VERSION - (c) www.pihomeserver.fr
+    Kupiki Hotspot - Version $KUPIKI_VERSION - (c) www.pihomeserver.fr
 
-" >> /etc/ssh/kupiki-banner
-check_returned_code $?
+    " >> /etc/ssh/kupiki-banner
+    check_returned_code $?
 
-display_message "Changing banner rights"
-chmod 644 /etc/ssh/kupiki-banner && chown root:root /etc/ssh/kupiki-banner
-check_returned_code $?
+    display_message "Changing banner rights"
+    chmod 644 /etc/ssh/kupiki-banner && chown root:root /etc/ssh/kupiki-banner
+    check_returned_code $?
 
-display_message "Activating the banner for SSH"
-sed -i "s?^#Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
-check_returned_code $?
+    display_message "Activating the banner for SSH"
+    sed -i "s?^#Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
+    check_returned_code $?
 
-display_message ""
-sed -i "s?^Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
-check_returned_code $?
+    display_message ""
+    sed -i "s?^Banner.*?Banner /etc/ssh/kupiki-banner?g" /etc/ssh/sshd_config
+    check_returned_code $?
+
+    execute_command "service ssh reload" true "Reload configuration for SSH service"
+fi
 
 display_message "Creating Kupiki Admin folder for the database"
 mkdir -p /var/local/kupiki
@@ -1027,6 +1031,12 @@ update user set authentication_string=password('$MYSQL_PASSWORD'), plugin='mysql
 flush privileges;
 EOT
 check_returned_code $?
+
+display_message "Creating backend script folder"
+mkdir -p /etc/kupiki && chmod 700 /etc/kupiki
+
+display_message "Creating version control file"
+echo $KUPIKI_VERSION > /etc/kupiki/version
 
 if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
     display_message "Going to webui folder"
@@ -1054,8 +1064,6 @@ if [ $NETFLOW_ENABLED = "Y" ]; then
     execute_command "service nfdump start" true "Starting nfdump service"
 fi
 
-execute_command "service ssh reload" true "Reload configuration for SSH service"
-
 execute_command "sleep 15 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
 if [ $COMMAND_RESULT -ne 0 ]; then
     display_message "*** Warning ***"
@@ -1064,12 +1072,6 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     # Do not exit to display connection information
     #exit 1
 fi
-
-display_message "Creating backend script folder"
-mkdir -p /etc/kupiki && chmod 700 /etc/kupiki
-
-display_message "Creating version control file"
-echo $KUPIKI_VERSION > /etc/kupiki/version
 
 # Last message to display once installation ended successfully
 

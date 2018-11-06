@@ -1,3 +1,7 @@
+**v2.0.6**
+- Issue #143 : check if SSH service is available and installed before updating banner
+- Update of the README file to add link to Patreon
+
 **v2.0.5**
 - Add WEB UI Admin installation capability from the main script
 

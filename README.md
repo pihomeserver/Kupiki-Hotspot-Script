@@ -26,7 +26,7 @@ Support my work
 
 Love Kupiki Hotspot or want to support it? Check out my [patreon page](https://www.patreon.com/pihomeserver) :)
 
-![patreonLink](http://www.pihomeserver.fr/hosting/patreon/patreon_1.png)
+[![patreonLink](http://www.pihomeserver.fr/hosting/patreon/patreon_1.png)](https://www.patreon.com/pihomeserver)
 
 
 To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
