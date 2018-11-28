@@ -750,10 +750,10 @@ check_returned_code $?
 
 if [ $MAC_AUTHENTICATION_ENABLED = "Y" ]; then
     display_message "Configure MAC address authentication (1/2)"
-    sed -i "HS_MACAUTH=on" /etc/chilli/config
+    sed -i '/^[ \t]*HS_RADSECRET=/{h;s/=.*/=on/};${x;/^$/{s//HS_RADSECRET=on/;H};x}' /etc/chilli/config
     check_returned_code $?
     display_message "Configure MAC address authentication (2/2)"
-    sed -i "HS_MACPASSWD=\"$MAC_AUTHENTICATION_PASSWORD\"" /etc/chilli/config
+    sed -i '/^[ \t]*HS_MACPASSWD=/{h;s/=.*/=\"$MAC_AUTHENTICATION_PASSWORD\"/};${x;/^$/{s//HS_MACPASSWD=\"$MAC_AUTHENTICATION_PASSWORD\"/;H};x}' /etc/chilli/config
     check_returned_code $?
 fi
 
