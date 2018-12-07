@@ -344,6 +344,7 @@ install_dependent_packages() {
     for i in "${argArray1[@]}"; do
       echo -n ":::    Checking for $i..."
       $SUDO package_check_install "${i}" &> /dev/null
+			check_returned_code $?
       echo " installed!"
     done
   fi
@@ -405,35 +406,35 @@ check_root
 get_updater
 
 if valid_ip_address 'NETWORK' $HOTSPOT_NETWORK && valid_ip_address 'IP' $HOTSPOT_IP; then
-    display_message "Checking HOTSPOT_NETWORK and HOTSPOT_IP parameters : OK"
+	display_message "Checking HOTSPOT_NETWORK and HOTSPOT_IP parameters : OK"
 else
-    display_message ""
-    display_message "Incorrect HOTSPOT_NETWORK and HOTSPOT_IP parameters"
-    display_message "HOTSPOT_NETWORK must be a network format (ex: 192.168.1.0) and HOTSPOT_IP must be an ip format (ex: 192.168.1.10)"
-    exit 1;
+	display_message ""
+	display_message "Incorrect HOTSPOT_NETWORK and HOTSPOT_IP parameters"
+	display_message "HOTSPOT_NETWORK must be a network format (ex: 192.168.1.0) and HOTSPOT_IP must be an ip format (ex: 192.168.1.10)"
+	exit 1;
 fi
 
 if [ $HOTSPOT_IP != $WAN_INTERFACE_IP ]; then
-    display_message "Checking that HOTSPOT_IP is not the same than the WAN_INTERFACE : OK"
+	display_message "Checking that HOTSPOT_IP is not the same than the WAN_INTERFACE : OK"
 else
-    display_message ""
-    display_message "HOTSPOT_IP is the same than the WAN_INTERFACE. They must be different."
-    exit 1;
+	display_message ""
+	display_message "HOTSPOT_IP is the same than the WAN_INTERFACE. They must be different."
+	exit 1;
 fi
 
 if [ $HOTSPOT_NETWORK != $WAN_INTERFACE_NETWORK_MASK ]; then
-    display_message "Checking that HOTSPOT_NETWORK is not the same than the WAN_INTERFACE network : OK"
+	display_message "Checking that HOTSPOT_NETWORK is not the same than the WAN_INTERFACE network : OK"
 else
-    display_message ""
-    display_message "HOTSPOT_NETWORK parameter is the same than the WAN_INTERFACE network. They must be different."
-    exit 1;
+	display_message ""
+	display_message "HOTSPOT_NETWORK parameter is the same than the WAN_INTERFACE network. They must be different."
+	exit 1;
 fi
 
 DEBIAN_VERSION=`cat /etc/*-release | grep VERSION_ID | awk -F= '{print $2}' | sed -e 's/^"//' -e 's/"$//'`
 if [[ $DEBIAN_VERSION -ne 9 ]];then
-        display_message ""
-        display_message "This script is used to get installed on Raspbian Stretch Lite"
-        display_message ""
+	display_message ""
+	display_message "This script is used to get installed on Raspbian Stretch Lite"
+	display_message ""
 	exit 1
 fi
 
@@ -450,10 +451,10 @@ notify_package_updates_available
 install_dependent_packages PIHOTSPOT_DEPS_START[@]
 
 if [ $BLUETOOTH_ENABLED = "N" ]; then
-    display_message "Disable integrated Bluetooth support (After next reboot)"
-    echo "
+	display_message "Disable integrated Bluetooth support (After next reboot)"
+	echo "
 dtoverlay=pi3-disable-bt-overlay" >> /boot/config.txt
-    check_returned_code $?
+	check_returned_code $?
 fi
 
 execute_command "dpkg --purge --force-all coova-chilli" true "Remove old configuration of Coova Chilli"

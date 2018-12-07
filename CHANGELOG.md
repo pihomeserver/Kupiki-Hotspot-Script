@@ -1,3 +1,7 @@
+**v2.0.7**
+- Issue #122 : check if package deployment is correct before continue the script execution
+- MR #149 : use config file instead of editing /etc/chilli/defaults
+
 **v2.0.6**
 - Issue #143 : check if SSH service is available and installed before updating banner
 - Update of the README file to add link to Patreon
