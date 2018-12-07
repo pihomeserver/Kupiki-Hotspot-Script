@@ -722,62 +722,39 @@ display_message "Activating CoovaChilli"
 sed -i 's/START_CHILLI=0/START_CHILLI=1/g' /etc/default/chilli
 check_returned_code $?
 
-execute_command "cp -f /etc/chilli/defaults /etc/chilli/defaults.backup" true "Backup of default configuration file"
-
-display_message "Configuring CoovaChilli WAN interface"
-sed -i "s/\# HS_WANIF=eth0/HS_WANIF=$WAN_INTERFACE/g" /etc/chilli/defaults
+display_message "Creating CoovaChilli at /etc/chilli/config"
+touch /etc/chilli/config
 check_returned_code $?
-
-display_message "Configuring CoovaChilli LAN interface"
-sed -i "s/HS_LANIF=eth1/HS_LANIF=$LAN_INTERFACE/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Configuring CoovaChilli hotspot network"
-sed -i "s/HS_NETWORK=10.1.0.0/HS_NETWORK=$HOTSPOT_NETWORK/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Configuring CoovaChilli hotspot IP"
-sed -i "s/HS_UAMLISTEN=10.1.0.1/HS_UAMLISTEN=$HOTSPOT_IP/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Configuring CoovaChilli authorized network"
-sed -i "s/\# HS_UAMALLOW=www\.coova\.org/HS_UAMALLOW=$HOTSPOT_NETWORK\/24/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Removing CoovaChilli secret key"
-sed -i "s/HS_RADSECRET=testing123/HS_RADSECRET=$FREERADIUS_SECRETKEY/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Removing CoovaChilli secret key"
-sed -i "s/HS_UAMSECRET=change-me/HS_UAMSECRET=/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Updating UAMFORMAT"
-sed -i "s/^HS_UAMFORMAT=.*$/HS_UAMFORMAT=$HOTSPOT_PROTOCOL$HOTSPOT_IP:$HOTSPOT_PORT/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Updating UAMHOMEPAGE"
-sed -i 's/^HS_UAMHOMEPAGE=.*$/HS_UAMHOMEPAGE=$HS_UAMFORMAT/g' /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Configuring CoovaChilli hotspot SSID"
-sed -i "s/\# HS_SSID=<ssid>/HS_SSID=$HOTSPOT_NAME/g" /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Add CoA support"
-sed -i '20iHS_COAPORT=3799' /etc/chilli/defaults
-check_returned_code $?
-
-display_message "Add firewall allowed port"
-sed -i "150iHS_TCP_PORTS=\"$HOTSPOT_PORT\"" /etc/chilli/defaults
+cat <<EOF > /etc/chilli/config
+HS_LANIF=$LAN_INTERFACE
+HS_WANIF=$WAN_INTERFACE
+HS_NETWORK=$HOTSPOT_NETWORK
+HS_NETMASK=255.255.255.0
+HS_UAMLISTEN=$HOTSPOT_IP
+HS_NASID="KUPIKI"
+HS_RADIUS=localhost
+HS_RADIUS2=localhost
+HS_RADSECRET=$FREERADIUS_SECRETKEY
+HS_UAMSECRET=
+HS_UAMALLOW=$HOTSPOT_NETWORK/24
+HS_UAMFORMAT=$HOTSPOT_PROTOCOL$HOTSPOT_IP:$HOTSPOT_PORT
+HS_UAMHOMEPAGE=$HS_UAMFORMAT
+HS_MODE=hotspot
+HS_TYPE=chillispot
+HS_LOC_NAME=$HOTSPOT_NAME
+HS_LAN_ACCESS=off
+HS_SSID=$HOTSPOT_NAME
+HS_TCP_PORTS=80
+HS_COAPORT=3799
+EOF
 check_returned_code $?
 
 if [ $MAC_AUTHENTICATION_ENABLED = "Y" ]; then
     display_message "Configure MAC address authentication (1/2)"
-    sed -i "20iHS_MACAUTH=on" /etc/chilli/defaults
+    sed -i '/^[ \t]*HS_MACAUTH=/{h;s/=.*/=on/};${x;/^$/{s//HS_MACAUTH=on/;H};x}' /etc/chilli/config
     check_returned_code $?
     display_message "Configure MAC address authentication (2/2)"
-    sed -i "21iHS_MACPASSWD=\"$MAC_AUTHENTICATION_PASSWORD\"" /etc/chilli/defaults
+    sed -i '/^[ \t]*HS_MACPASSWD=/{h;s/=.*/=\"$MAC_AUTHENTICATION_PASSWORD\"/};${x;/^$/{s//HS_MACPASSWD=\"$MAC_AUTHENTICATION_PASSWORD\"/;H};x}' /etc/chilli/config
     check_returned_code $?
 fi
 
