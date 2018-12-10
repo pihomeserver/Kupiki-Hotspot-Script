@@ -414,7 +414,7 @@ else
 	exit 1;
 fi
 
-if [ $HOTSPOT_IP != $WAN_INTERFACE_IP ]; then
+if [[ $HOTSPOT_IP != $WAN_INTERFACE_IP ]]; then
 	display_message "Checking that HOTSPOT_IP is not the same than the WAN_INTERFACE : OK"
 else
 	display_message ""
