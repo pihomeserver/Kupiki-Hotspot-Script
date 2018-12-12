@@ -1,3 +1,7 @@
+**v2.0.8**
+- Fix the updater script to change coova configuration file like in MR #149 (v2.0.7 missing)
+- MR #151 : Fix for "unary operator expected" for all tests
+
 **v2.0.7**
 - Issue #122 : check if package deployment is correct before continue the script execution
 - MR #149 : use config file instead of editing /etc/chilli/defaults

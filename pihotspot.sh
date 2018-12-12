@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.6"
+KUPIKI_VERSION="2.0.8"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -287,13 +287,13 @@ download_all_sources() {
 
   execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Web UI project"
 
-  if [ $HASERL_INSTALL = "Y" ]; then
+  if [[ "$HASERL_INSTALL" = "Y" ]]; then
 
     execute_command "cd /usr/src && rm -f ${HASERL_ARCHIVE}.tar.gz && wget $HASERL_URL" true "Download Haserl"
 
   fi
 
-  if [ $DALORADIUS_INSTALL = "Y" ]; then
+  if [[ "$DALORADIUS_INSTALL" = "Y" ]]; then
 
     execute_command "cd /usr/src/ && rm -rf daloradius && git clone $DALORADIUS_ARCHIVE daloradius" true "Cloning daloradius project"
 
@@ -393,9 +393,9 @@ get_updater() {
     check_returned_code $?
   fi
 
-  if [ $ADD_CRON_UPDATER = "Y" ]; then
+  if [[ "$ADD_CRON_UPDATER" = "Y" ]]; then
     execute_command "grep kupiki_updater /etc/crontab" false "Checking for existing cron job"
-    if [ $COMMAND_RESULT -ne 0 ]; then
+    if [[ $COMMAND_RESULT -ne 0 ]]; then
       echo "0 6 * * 0 root /etc/kupiki/kupiki_updater.sh" >> /etc/crontab
     fi
   fi
@@ -414,7 +414,7 @@ else
 	exit 1;
 fi
 
-if [ $HOTSPOT_IP != $WAN_INTERFACE_IP ]; then
+if [[ "$HOTSPOT_IP" != "$WAN_INTERFACE_IP" ]]; then
 	display_message "Checking that HOTSPOT_IP is not the same than the WAN_INTERFACE : OK"
 else
 	display_message ""
@@ -422,7 +422,7 @@ else
 	exit 1;
 fi
 
-if [ $HOTSPOT_NETWORK != $WAN_INTERFACE_NETWORK_MASK ]; then
+if [[ "$HOTSPOT_NETWORK" != "$WAN_INTERFACE_NETWORK_MASK" ]]; then
 	display_message "Checking that HOTSPOT_NETWORK is not the same than the WAN_INTERFACE network : OK"
 else
 	display_message ""
@@ -450,7 +450,7 @@ notify_package_updates_available
 
 install_dependent_packages PIHOTSPOT_DEPS_START[@]
 
-if [ $BLUETOOTH_ENABLED = "N" ]; then
+if [[ "$BLUETOOTH_ENABLED" = "N" ]]; then
 	display_message "Disable integrated Bluetooth support (After next reboot)"
 	echo "
 dtoverlay=pi3-disable-bt-overlay" >> /boot/config.txt
@@ -462,7 +462,7 @@ execute_command "dpkg --purge --force-all haserl" true "Remove old configuration
 execute_command "dpkg --purge --force-all hostapd" true "Remove old configuration of hostapd"
 
 execute_command "/sbin/lsmod | grep tun" false "Checking for tun module"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
     display_message "Insert tun module if existing (for Raspbian Jessie Lite)"
     find /lib/modules/ -iname "tun.ko.gz" -exec /sbin/insmod {} \;
     check_returned_code $?
@@ -471,7 +471,7 @@ if [ $COMMAND_RESULT -ne 0 ]; then
     /sbin/modprobe tun
 
     execute_command "/sbin/lsmod | grep tun" false "Checking for tun module"
-    if [ $COMMAND_RESULT -ne 0 ]; then
+    if [[ $COMMAND_RESULT -ne 0 ]]; then
         display_message "Unable to get tun module up. Please solve before running the script again."
         display_message "If your distribution has been upgraded you should try to reboot first."
         exit 1
@@ -479,7 +479,7 @@ if [ $COMMAND_RESULT -ne 0 ]; then
 fi
 
 execute_command "/sbin/ifconfig -a | grep $LAN_INTERFACE" false "Checking if wlan0 interface already exists"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
     display_message "Wifi interface not found. Upgrading the system first"
 
     execute_command "apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages" true "Upgrading the distro. Be patient"
@@ -496,7 +496,7 @@ execute_command "echo 'maria-db-$MARIADB_VERSION mysql-server/root_password_agai
 display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
 MY_IP=`ifconfig $WAN_INTERFACE | grep "inet " | awk '{ print $2 }'`
 
-if [ $AVAHI_INSTALL = "Y" ]; then
+if [[ "$AVAHI_INSTALL" = "Y" ]]; then
     display_message "Adding Avahi dependencies"
     PIHOTSPOT_DEPS+=( avahi-daemon libavahi-client-dev )
 
@@ -505,7 +505,7 @@ if [ $AVAHI_INSTALL = "Y" ]; then
     check_returned_code $?
 
     execute_command "grep $HOTSPOT_NAME /etc/hosts" false "Updating /etc/hosts"
-    if [ $COMMAND_RESULT -ne 0 ]; then
+    if [[ $COMMAND_RESULT -ne 0 ]]; then
         sed -i "s/raspberrypi/$HOTSPOT_NAME/" /etc/hosts
         check_returned_code $?
     fi
@@ -513,7 +513,7 @@ fi
 
 install_dependent_packages PIHOTSPOT_DEPS[@]
 
-if [ $NETFLOW_ENABLED = "Y" ]; then
+if [[ "$NETFLOW_ENABLED" = "Y" ]]; then
     DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe nfdump
 fi
 
@@ -524,7 +524,7 @@ download_all_sources
 execute_command "service mariadb restart" true "Starting MySql service"
 
 execute_command "grep $WAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($WAN_INTERFACE)"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
 cat >> /etc/network/interfaces << EOT
 
 auto $WAN_INTERFACE
@@ -535,7 +535,7 @@ EOT
 fi
 
 execute_command "grep $LAN_INTERFACE /etc/network/interfaces" false "Update interface configuration ($LAN_INTERFACE)"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
 cat >> /etc/network/interfaces << EOT
 
 auto $LAN_INTERFACE
@@ -550,7 +550,7 @@ EOT
 fi
 
 execute_command "grep '^country=' /etc/wpa_supplicant/wpa_supplicant.conf" false "Update wifi configuration to add country code"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
     display_message "Adding country code to wpa_supplicant"
     echo "country=$WIFI_COUNTRY_CODE" >> /etc/wpa_supplicant/wpa_supplicant.conf
     check_returned_code $?
@@ -559,7 +559,7 @@ fi
 execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
 execute_command "ifup $LAN_INTERFACE" true "Activating the LAN interface"
 
-if [ $NETFLOW_ENABLED = "Y" ]; then
+if [[ "$NETFLOW_ENABLED" = "Y" ]]; then
     display_message "Stopping fprobe service"
     service fprobe stop
     check_returned_code $?
@@ -596,7 +596,7 @@ EOT
 
     display_message "Adding logs cleaning every day at 1am (system time)"
     execute_command "grep nfexpire /etc/crontab" false "Adding Netflow stats update in the crontab"
-    if [ $COMMAND_RESULT -ne 0 ]; then
+    if [[ $COMMAND_RESULT -ne 0 ]]; then
         echo "00 01 * * * root /usr/bin/nfexpire -r /var/cache/nfdump" >> /etc/crontab
         check_returned_code $?
     fi
@@ -750,7 +750,7 @@ HS_COAPORT=3799
 EOF
 check_returned_code $?
 
-if [ $MAC_AUTHENTICATION_ENABLED = "Y" ]; then
+if [[ "$MAC_AUTHENTICATION_ENABLED" = "Y" ]]; then
     display_message "Configure MAC address authentication (1/2)"
     sed -i '/^[ \t]*HS_MACAUTH=/{h;s/=.*/=on/};${x;/^$/{s//HS_MACAUTH=on/;H};x}' /etc/chilli/config
     check_returned_code $?
@@ -761,7 +761,7 @@ fi
 
 execute_command "update-rc.d chilli start 99 2 3 4 5 . stop 20 0 1 6 ." true "Activating CoovaChilli on boot"
 
-if [ $HASERL_INSTALL = "Y" ]; then
+if [[ "$HASERL_INSTALL" = "Y" ]]; then
 
     execute_command "cd /usr/src && tar zxvf ${HASERL_ARCHIVE}.tar.gz" true "Uncompressing Haserl archive"
 
@@ -790,7 +790,7 @@ rts_threshold=2347
 fragm_threshold=2346" > /etc/hostapd/hostapd.conf
 check_returned_code $?
 
-if [ $DALORADIUS_INSTALL = "Y" ]; then
+if [[ "$DALORADIUS_INSTALL" = "Y" ]]; then
 
     execute_command "cp -Rf /usr/src/daloradius /usr/share/nginx/html/" true "Installing Daloradius in Nginx folder"
 
@@ -847,7 +847,7 @@ if [ $DALORADIUS_INSTALL = "Y" ]; then
 fi
 
 display_message "Building NGINX configuration for the portal (default listen port : $HOTSPOT_PORT)"
-if [ $HOTSPOT_HTTPS = "Y" ]; then
+if [[ "$HOTSPOT_HTTPS" = "Y" ]]; then
     display_message "Creating folder for Nginx certificates"
     mkdir /etc/nginx/certs/
     check_returned_code $?
@@ -938,7 +938,7 @@ display_message "Correct configuration for Collectd daemon"
 sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
-if [ $FAIL2BAN_ENABLED = "Y" ]; then
+if [[ "$FAIL2BAN_ENABLED" = "Y" ]]; then
     display_message "Creating fail2ban local configuration"
     cp /etc/fail2ban/fail2ban.conf /etc/fail2ban/fail2ban.local
     check_returned_code $?
@@ -966,7 +966,7 @@ EOT
     check_returned_code $?
 fi
 
-if [ -d "/etc/ssh" ]; then
+if [[ -d "/etc/ssh" ]]; then
     display_message "Create banner on login"
     /usr/bin/figlet -f lean -c "Kupiki Hotspot" | tr ' _/' ' /' > /etc/ssh/kupiki-banner
     check_returned_code $?
@@ -1016,8 +1016,8 @@ mkdir -p /etc/kupiki && chmod 700 /etc/kupiki
 display_message "Creating version control file"
 echo $KUPIKI_VERSION > /etc/kupiki/version
 
-if [ $INSTALL_KUPIKI_ADMIN = "Y" ]; then
-    display_message "Going to webui folder"
+if [[ "$INSTALL_KUPIKI_ADMIN" = "Y" ]]; then
+    display_message "Change directory to webui folder"
     cd /usr/src/webui
     check_returned_code $?
 
@@ -1034,7 +1034,7 @@ execute_command "service hostapd restart" true "Restarting hostapd"
 
 execute_command "service chilli start" true "Starting CoovaChilli service"
 
-if [ $NETFLOW_ENABLED = "Y" ]; then
+if [[ "$NETFLOW_ENABLED" = "Y" ]]; then
     execute_command "service fprobe start" true "Starting fprobe service"
 
     execute_command "systemctl daemon-reload" true "Reloading units for systemctl"
@@ -1043,7 +1043,7 @@ if [ $NETFLOW_ENABLED = "Y" ]; then
 fi
 
 execute_command "sleep 15 && ifconfig -a | grep tun0" false "Checking if interface tun0 has been created by CoovaChilli"
-if [ $COMMAND_RESULT -ne 0 ]; then
+if [[ $COMMAND_RESULT -ne 0 ]]; then
     display_message "*** Warning ***"
     display_message "Unable to find chilli interface tun0"
     display_message "Try to restart chilli and check if tun0 interface is available (use 'ifconfig -a')"
@@ -1058,7 +1058,7 @@ display_message ""
 display_message "Congratulation ! You now have your hotspot ready !"
 display_message ""
 display_message "- Wifi Hotspot available : $HOTSPOT_NAME"
-if [ $AVAHI_INSTALL = "Y" ]; then
+if [[ "$AVAHI_INSTALL" = "Y" ]]; then
     display_message "- For the user management, please connect to http://$MY_IP/ or http://$HOTSPOT_NAME.local/"
 else
     display_message "- For the user management, please connect to http://$MY_IP/"
