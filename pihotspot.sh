@@ -113,8 +113,8 @@ PKG_UPGRADE="${PKG_MANAGER} --yes upgrade"
 PKG_DIST_UPGRADE="apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages"
 PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
 
-WAN_INTERFACE_IP=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 10`
-WAN_INTERFACE_IP_MASK=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 13`
+WAN_INTERFACE_IP=`ifconfig $WAN_INTERFACE | grep "inet " | cut -d ' ' -f 10`
+WAN_INTERFACE_IP_MASK=`ifconfig $WAN_INTERFACE | grep "inet " | cut -d ' ' -f 13`
 
 IFS=. read -r i1 i2 i3 i4 <<< "$WAN_INTERFACE_IP"
 IFS=. read -r m1 m2 m3 m4 <<< "$WAN_INTERFACE_IP_MASK"
