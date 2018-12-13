@@ -285,7 +285,7 @@ download_all_sources() {
 
   execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
-  execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Web UI project"
+  execute_command "cd /usr/src && rm -rf webui && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Web UI project"
 
   if [[ "$HASERL_INSTALL" = "Y" ]]; then
 
