@@ -1,3 +1,8 @@
+**v2.0.9**
+- MR #154 : remove hardcoded control of the WAN interface
+- MR #154 : first remove the folder of Kupiki Admin first before downloading the source from Git
+- Add a test when executing the script more than one time (not recommanded)
+
 **v2.0.8**
 - Fix the updater script to change coova configuration file like in MR #149 (v2.0.7 missing)
 - MR #151 : Fix for "unary operator expected" for all tests

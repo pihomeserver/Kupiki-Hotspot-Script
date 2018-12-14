@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.8"
+KUPIKI_VERSION="2.0.9"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -113,8 +113,8 @@ PKG_UPGRADE="${PKG_MANAGER} --yes upgrade"
 PKG_DIST_UPGRADE="apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages"
 PKG_COUNT="${PKG_MANAGER} -s -o Debug::NoLocking=true upgrade | grep -c ^Inst || true"
 
-WAN_INTERFACE_IP=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 10`
-WAN_INTERFACE_IP_MASK=`ifconfig eth0 | grep "inet " | cut -d ' ' -f 13`
+WAN_INTERFACE_IP=`ifconfig $WAN_INTERFACE | grep "inet " | cut -d ' ' -f 10`
+WAN_INTERFACE_IP_MASK=`ifconfig $WAN_INTERFACE | grep "inet " | cut -d ' ' -f 13`
 
 IFS=. read -r i1 i2 i3 i4 <<< "$WAN_INTERFACE_IP"
 IFS=. read -r m1 m2 m3 m4 <<< "$WAN_INTERFACE_IP_MASK"
@@ -285,7 +285,9 @@ download_all_sources() {
 
   execute_command "cd /usr/src && git clone $COOVACHILLI_ARCHIVE coova-chilli" true "Cloning CoovaChilli project"
 
-  execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Web UI project"
+  execute_command "cd /usr/src && rm -rf webui" true "Removing any previous sources of Kupiki Admin"
+
+  execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Admin web UI project"
 
   if [[ "$HASERL_INSTALL" = "Y" ]]; then
 
@@ -401,7 +403,23 @@ get_updater() {
   fi
 }
 
+check_previous_execution() {
+    if [ -d /etc/kupiki ]; then
+        display_message "A previous installation has been done. It's not recommanded to execute more than once the script."
+        read -p "Are you sure (Y/N) ?" -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            exit 1;
+        fi
+    else
+        display_message "No previous installation of Kupiki. We continue the installation of the hotspot."
+        exit 1;
+    fi
+}
+
 check_root
+
+check_previous_execution
 
 get_updater
 
