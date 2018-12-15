@@ -1,4 +1,7 @@
 **v2.0.9**
+- Add default value (off) for Mac authentication. Required for the Kupiki Admin frontend
+
+**v2.0.9**
 - MR #154 : remove hardcoded control of the WAN interface
 - MR #154 : first remove the folder of Kupiki Admin first before downloading the source from Git
 - Add a test when executing the script more than one time (not recommanded)

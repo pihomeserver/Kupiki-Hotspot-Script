@@ -12,7 +12,15 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10")
+
+upgrade_2.0.10() {
+  grep HS_MACAUTH /etc/chilli/config
+  if [ $? -ne 0 ]; then
+    echo "HS_MACAUTH=off" >> /etc/chilli/config
+    echo "HS_MACPASSWD=" >> /etc/chilli/config
+  fi
+}
 
 upgrade_2.0.9() {
   :

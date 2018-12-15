@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.9"
+KUPIKI_VERSION="2.0.10"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -765,6 +765,8 @@ HS_LAN_ACCESS=off
 HS_SSID=$HOTSPOT_NAME
 HS_TCP_PORTS=80
 HS_COAPORT=3799
+HS_MACAUTH=off
+HS_MACPASSWD=
 EOF
 check_returned_code $?
 
