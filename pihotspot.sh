@@ -76,7 +76,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.10"
+KUPIKI_VERSION="2.0.11"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -413,7 +413,6 @@ check_previous_execution() {
         fi
     else
         display_message "No previous installation of Kupiki. We continue the installation of the hotspot."
-        exit 1;
     fi
 }
 
@@ -767,6 +766,7 @@ HS_TCP_PORTS=80
 HS_COAPORT=3799
 HS_MACAUTH=off
 HS_MACPASSWD=
+HS_UAMDOMAINS=
 EOF
 check_returned_code $?
 

@@ -1,4 +1,8 @@
-**v2.0.9**
+**v2.0.11**
+- Add HS_UAMDOMAINS parameter to allow some domains to be browsed before getting authenticated
+- Remove an unwanted exit in the control of an existing previous install
+
+**v2.0.10**
 - Add default value (off) for Mac authentication. Required for the Kupiki Admin frontend
 
 **v2.0.9**
