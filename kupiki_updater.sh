@@ -209,6 +209,35 @@ function copy_file() {
   cp "${EXECUTABLE_SHELL_SCRIPT}" "${EXISTING_SHELL_SCRIPT}"
 }
 
+db() { ( printf " db, ";for _i;do printf "%s" "$_i";done;printf "\n" ) >&2 ; }
+db() { : ; }
+
+function version_compare() {
+  local a1 b1 c1 a2 b2 c2
+  # echo|read succeeds in ksh, but fails in bash.
+  # bash alternative is "set --"
+  db "input 1 \"$1\", 2 \"$2\" "
+  v1=$1
+  v2=$2
+  db "v1 $v1, v2 $v2"
+  set -- $( echo "$v1" | sed 's/\./ /g' )
+  a1=$1 b1=$2 c1=$3
+  set -- $( echo "$v2" | sed 's/\./ /g' )
+  a2=$1 b2=$2 c2=$3
+  db "a1,b1,c1 $a1,$b1,$c1 ; a2,b2,c2 $a2,$b2,$c2"
+  ret=$(( (a1-a2)*1000000+(b1-b2)*1000+c1-c2 ))
+  db "ret is $ret"
+  if [ $ret -lt 0 ] ; then
+    v=-1
+  elif [ $ret -eq 0 ] ; then
+    v=0
+  else
+    v=1
+  fi
+  printf "%d" $v
+  return
+}
+
 function main() {
   prepare_logfile
 
@@ -220,14 +249,16 @@ function main() {
   display_message "Latest version : ${KUPIKI_LATEST_VERSION}"
   display_message "Current installed version : ${KUPIKI_CURRENT_VERSION}"
 
-  if [ ${KUPIKI_LATEST_VERSION} \< ${KUPIKI_CURRENT_VERSION} ]; then
+  version_diff=$( version_compare $KUPIKI_LATEST_VERSION $KUPIKI_CURRENT_VERSION )
+
+  if [[ ${version_diff} -eq -1 ]]; then
     display_message ""
     display_message "Ooops seems you have a newer version of the script than the latest one on GitHub"
     display_message "Please input a new issue on GitHub to solve the problem"
     exit 1
   fi
 
-  if [ ${KUPIKI_LATEST_VERSION} = ${KUPIKI_CURRENT_VERSION} ]; then
+  if [[ ${version_diff} -eq 0 ]]; then
     display_message ""
     display_message "You already have the latest version. Nothing to do."
     exit 0
@@ -235,7 +266,8 @@ function main() {
 
   display_message ""
   for i in "${!KUPIKI_UPDATES[@]}"; do
-    if [ ${KUPIKI_CURRENT_VERSION} \< ${KUPIKI_UPDATES[$i]} ]; then
+    version_diff=$( version_compare ${KUPIKI_UPDATES[$i]} $KUPIKI_CURRENT_VERSION )
+    if [[ ${version_diff} -eq 1 ]]; then
       display_message "Upgrading to version "${KUPIKI_UPDATES[$i]}
       display_message ""
       UPGRADE_FUNCTION="upgrade_"${KUPIKI_UPDATES[$i]}

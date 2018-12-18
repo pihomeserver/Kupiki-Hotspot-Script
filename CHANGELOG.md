@@ -1,3 +1,6 @@
+**v2.0.12**
+- Bug fixing in the updater
+
 **v2.0.11**
 - Add HS_UAMDOMAINS parameter to allow some domains to be browsed before getting authenticated
 - Remove an unwanted exit in the control of an existing previous install
