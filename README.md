@@ -34,19 +34,19 @@ To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Ho
 Requirements
 ============
 
-What are the requirements ? 
+What are the requirements ?
 - A Raspberry Pi 3 or 3B+
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
 - A 4Gb micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
-Usage
+Installation
 =====
 
 You just have to download the script, edit it to update it's parameters, execute and wait ... If the wifi on the Raspberry is not already configured, don't worry, the script will do it
 
-- Download the script with the following command   
+- Download the script with the following command
 ` git clone https://github.com/pihomeserver/Kupiki-Hotspot-Script.git`
 - Edit the script and update the first lines to define your own configuration (take care that an ethernet link is required) **[Please read the wiki for more help about parameters](https://github.com/pihomeserver/Kupiki-Hotspot-Script/wiki)**
 - Execute the script using the following command :
@@ -54,9 +54,11 @@ You just have to download the script, edit it to update it's parameters, execute
 
 A log file named `pihotspot.log` will be created in the folder `/var/log`. Open a new session on the Pi and run the following command `tail -f /var/log/pihotspot.log`
 
+In case you want to give a try to Kupiki Hotspot in a Virtual Machine, please look at [this Wiki page](https://github.com/pihomeserver/Kupiki-Hotspot-Script/wiki/Using-Kupiki-Hotspot-in-a-virtual-machine)
+
 Then
 =====
-Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi. 
+Once installed use your favorite browser to connect to daloRadius installed on your Raspberry Pi.
 ` http://<mypi_ip>/daloradius ` or ` http://<my_hotspot_name>.local/daloradius ` if your system supports Bonjour.
 The exact address will be displayed at the end of the script execution.
 
