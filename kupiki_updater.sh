@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Autoupdating based on https://stackoverflow.com/a/44528451/3791371
+# Autoupdater based on https://stackoverflow.com/a/44528451/3791371
 set -fb
 
 CURRENT_PWD=$(cd "$(dirname "$0")" ; pwd)
@@ -12,7 +12,17 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12" "2.0.13")
+
+upgrade_2.0.13() {
+  # Kupiki SQL counters
+  KUPIKI_SQL_COUNTERS_URL="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/updates/sqlcounter"
+  execute_command "cd /usr/src && rm -f sqlcounter && wget $KUPIKI_SQL_COUNTERS_URL" true "Download Kupiki SQL Counters"
+  execute_command "service freeradius stop" true "Stoping freeradius service"
+  execute_command "cp -f /usr/src/sqlcounter /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Adding CoovaChilli counters (limit bandwidth)"
+  execute_command "chown freerad:freerad /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Updating file access rights"
+  execute_command "service freeradius start" true "Starting freeradius service"
+}
 
 upgrade_2.0.12() {
   :

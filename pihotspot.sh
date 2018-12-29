@@ -68,6 +68,9 @@ INSTALL_KUPIKI_ADMIN=N
 # Install Cron job for the hotspot updater. Will be executed every sunday at 8am (system time)
 # Set value to Y or N
 ADD_CRON_UPDATER=Y
+# Install additional counters
+# Set value to Y or N
+KUPIKI_SQL_COUNTERS=Y
 
 # *************************************
 #
@@ -76,7 +79,7 @@ ADD_CRON_UPDATER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.0.12"
+KUPIKI_VERSION="2.0.13"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -92,6 +95,8 @@ fi
 MARIADB_VERSION='10.1'
 # CoovaChilli GIT URL
 COOVACHILLI_ARCHIVE="https://github.com/coova/coova-chilli.git"
+# Kupiki SQL counters
+KUPIKI_SQL_COUNTERS_URL="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/updates/sqlcounter"
 # Daloradius URL
 DALORADIUS_ARCHIVE="https://github.com/lirantal/daloradius.git"
 # Captive Portal URL
@@ -289,6 +294,12 @@ download_all_sources() {
 
   execute_command "cd /usr/src && git clone $KUPIKI_WEBUI_ARCHIVE webui" true "Cloning Kupiki Admin web UI project"
 
+  if [[ "$KUPIKI_SQL_COUNTERS" = "Y" ]]; then
+
+    execute_command "cd /usr/src && rm -f sqlcounter && wget $KUPIKI_SQL_COUNTERS_URL" true "Download Kupiki SQL Counters"
+
+  fi
+
   if [[ "$HASERL_INSTALL" = "Y" ]]; then
 
     execute_command "cd /usr/src && rm -f ${HASERL_ARCHIVE}.tar.gz && wget $HASERL_URL" true "Download Haserl"
@@ -332,9 +343,10 @@ package_check_install() {
     dpkg-query -W -f='${Status}' "${1}" 2>/dev/null | grep -c "ok installed" || ${PKG_INSTALL} "${1}"
 }
 
-PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git )
+PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git wget )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+#PIHOTSPOT_DEPS=( wget build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd2-xpm-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make libnl1 libnl-dev pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
+PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake )
 
 install_dependent_packages() {
 
@@ -495,9 +507,9 @@ if [[ $COMMAND_RESULT -ne 0 ]]; then
     fi
 fi
 
-execute_command "/sbin/ifconfig -a | grep $LAN_INTERFACE" false "Checking if wlan0 interface already exists"
+execute_command "/sbin/ifconfig -a | grep $LAN_INTERFACE" false "Checking if LAN interface already exists"
 if [[ $COMMAND_RESULT -ne 0 ]]; then
-    display_message "Wifi interface not found. Upgrading the system first"
+    display_message "LAN interface not found. Upgrading the system first"
 
     execute_command "apt dist-upgrade -y --allow-remove-essential --allow-change-held-packages" true "Upgrading the distro. Be patient"
 
@@ -566,11 +578,13 @@ EOT
     check_returned_code $?
 fi
 
-execute_command "grep '^country=' /etc/wpa_supplicant/wpa_supplicant.conf" false "Update wifi configuration to add country code"
-if [[ $COMMAND_RESULT -ne 0 ]]; then
-    display_message "Adding country code to wpa_supplicant"
-    echo "country=$WIFI_COUNTRY_CODE" >> /etc/wpa_supplicant/wpa_supplicant.conf
-    check_returned_code $?
+if [ -e /etc/wpa_supplicant/wpa_supplicant.conf ]; then
+    execute_command "grep '^country=' /etc/wpa_supplicant/wpa_supplicant.conf" false "Update wifi configuration to add country code"
+    if [[ $COMMAND_RESULT -ne 0 ]]; then
+        display_message "Adding country code to wpa_supplicant"
+        echo "country=$WIFI_COUNTRY_CODE" >> /etc/wpa_supplicant/wpa_supplicant.conf
+        check_returned_code $?
+    fi
 fi
 
 execute_command "ifup $WAN_INTERFACE" true "Activating the WAN interface"
@@ -713,6 +727,12 @@ check_returned_code $?
 chown -R freerad:freerad /etc/freeradius/3.0/sites-enabled/coa
 check_returned_code $?
 
+if [[ "$KUPIKI_SQL_COUNTERS" = "Y" ]]; then
+    execute_command "cp -f /usr/src/sqlcounter /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Adding CoovaChilli counters (limit bandwidth)"
+
+    execute_command "chown freerad:freerad /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Updating file access rights"
+fi
+
 execute_command "freeradius -C" true "Checking freeradius configuration"
 
 display_message "Activating IP forwarding"
@@ -722,7 +742,8 @@ execute_command "/etc/init.d/networking restart" true "Restarting network servic
 
 execute_command "cd /usr/src/coova-chilli && dpkg-buildpackage -us -uc" true "Building CoovaChilli package"
 
-execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
+#execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_armhf.deb" true "Installing CoovaChilli package"
+execute_command "cd /usr/src && dpkg --force-depends -i coova-chilli_*_*.deb" true "Installing CoovaChilli package"
 
 display_message "Configuring CoovaChilli up action"
 echo 'ipt -I POSTROUTING -t nat -o $HS_WANIF -j MASQUERADE' >> /etc/chilli/up.sh

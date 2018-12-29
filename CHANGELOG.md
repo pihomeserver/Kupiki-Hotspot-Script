@@ -1,3 +1,9 @@
+**v2.0.13**
+- Bug fix on a check on wlan0 instead of LAN_INTERFACE
+- Bug fix on a check on existing wpa_supplicant file
+- Add counters for CoovaChilli. New counters allow to control bandwitdth limit (upload/download) based on a frequency (daily/weekly/etc.). Counters are from Daloradius release updated/corrected to work with FR3. Counters are located in a new file of the repo /updates/sqlcounter
+- Update the script to be executed on a Debian 9 VM
+
 **v2.0.12**
 - Bug fixing in the updater
 
