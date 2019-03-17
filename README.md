@@ -4,14 +4,17 @@ What is Kupiki Hotspot
 ==================
 
 This project is the latest version of [the tutorial](http://www.pihomeserver.fr/2015/08/05/raspberry-pi-coovachilli-et-freeradius-pour-un-hotspot-wifi-avec-portail-captif/) created first on my blog [Pi Home Server](http://www.pihomeserver.fr)
-Created on a Raspberry Pi 2, some functionalities and tools where not available for the Raspberry Pi 3. Also the tutorial was a little bit difficult to 
+Created on a Raspberry Pi 2, some functionalities and tools where not available for the Raspberry Pi 3. Also the tutorial was a little bit difficult to
 implement because of too many steps. That's why i decided to create a script that will help you to build your own hotspot automatically.
 
 Once the script is executed, you will get :
 - A Wifi hotspot using the integrated wifi chipset
 - A custom captive portal based on coovachilli
     - The portal is served by the high performance web server Nginx
-    - The design of the portal can be easily modified for anyone who has knowledge in HTML and Javascript    
+    - The design of the portal can be easily modified for anyone who has knowledge in HTML and Javascript
+    - Register feature available for users
+        - Must be activated via the portal configuration file
+        - Security on the backend to limit access to the register API
 - An authentication process based on freeRadius
     - User/password authentication
     - MAC address authentication (optionnal)

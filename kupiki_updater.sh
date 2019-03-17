@@ -12,7 +12,99 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12" "2.0.13")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12" "2.0.13" "2.1.0")
+
+upgrade_2.1.0() {
+  # Captive Portal URL
+  HOTSPOTPORTAL_BACKEND_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal-Backend.git"
+  execute_command "cd /usr/src/ && rm -rf kupiki-portal-backend && git clone $HOTSPOTPORTAL_BACKEND_ARCHIVE kupiki-portal-backend" true "Cloning Pi Hotspot portal backend project"
+
+  display_message "Correct configuration for Collectd daemon"
+  sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
+  check_returned_code $?
+
+  type docker 2> /dev/null
+  if [ $? -ne 0 ]; then
+      display_message "Install Docker"
+      curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+      check_returned_code $?
+  fi
+
+  id -u kupiki > /dev/null
+  if [ $? -ne 0 ]; then
+      display_message "Create dedicated user kupiki"
+      adduser --disabled-password --gecos "" kupiki
+      check_returned_code $?
+  fi
+
+  grep -q -E "^docker:" /etc/group
+  if [ $? -ne 0 ]; then
+      display_message "Create Docker user group"
+      groupadd -f docker
+      check_returned_code $?
+  fi
+
+  id kupiki | grep docker > /dev/null
+  if [ $? -ne 0 ]; then
+      display_message "Add user kupiki to docker group"
+      gpasswd -a kupiki docker
+      check_returned_code $?
+  fi
+
+  type docker-compose 2> /dev/null
+  if [ $? -ne 0 ]; then
+      display_message "Install docker-compose"
+      pip install docker-compose
+      check_returned_code $?
+  fi
+
+  HOTSPOTPORTAL_ARCHIVE="https://github.com/Kupiki/Kupiki-Hotspot-Portal.git"
+  execute_command "cd /usr/src/ && rm -rf portal && git clone $HOTSPOTPORTAL_ARCHIVE portal" true "Cloning Pi Hotspot portal project"
+  execute_command "cp -Rf /usr/src/portal /usr/share/nginx/" true "Updating the portal frontend"
+
+  # Get hotspot IP
+  HOTSPOT_IP=`grep HS_UAMLISTEN /etc/chilli/config | cut -d'=' -f2`
+  display_message "Updating Captive Portal configuration file"
+  sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json
+  check_returned_code $?
+
+  execute_command "cp -Rf /usr/src/kupiki-portal-backend /home/kupiki/" true "Installing the portal backend in the user kupiki home folder"
+
+  MYSQL_PASSWORD=pihotspot
+  display_message "Updating Captive Portal backend configuration file"
+  sed -i "/pihotspot/s/pihotspot/$MYSQL_PASSWORD/g" /home/kupiki/kupiki-portal-backend/app/src/config.json
+  check_returned_code $?
+
+  execute_command "chown -R kupiki:kupiki /home/kupiki/kupiki-portal-backend"
+
+  display_message "Build the Docker image of Portal backend"
+  su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && /usr/local/bin/docker-compose build"
+  check_returned_code $?
+
+  # Make startup of docker compose as a service (after Docker)
+  display_message "Adding portal backend in systemd startup"
+  echo "
+  [Unit]
+  Description=Kupiki Portal Backend container
+  Requires=docker.service
+  After=docker.service
+
+  [Service]
+  #Restart=always
+  Type=oneshot
+  RemainAfterExit=yes
+  WorkingDirectory=/home/kupiki/kupiki-portal-backend
+  ExecStart=/usr/local/bin/docker-compose up -d
+  ExecStop=/usr/local/bin/docker-compose stop
+
+  [Install]
+  WantedBy=default.target
+  " > /etc/systemd/system/kupiki-portal-backend.service
+
+  display_message "Disabling Portal backend service"
+  /bin/systemctl disable kupiki-portal-backend.service
+  check_returned_code $?
+}
 
 upgrade_2.0.13() {
   # Kupiki SQL counters

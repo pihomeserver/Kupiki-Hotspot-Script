@@ -1,3 +1,6 @@
+**v2.1.0**
+- Change authentication architecture in order to use a middleware nodeJS service to allow users registration capabilities
+
 **v2.0.13**
 - Bug fix on a check on wlan0 instead of LAN_INTERFACE
 - Bug fix on a check on existing wpa_supplicant file
@@ -86,7 +89,7 @@
 
 **v1.7.2**
 - Extand requested disk space from 500MB to 1GB
-- Add option to define how long logs should be kept 
+- Add option to define how long logs should be kept
 - Issue #81 : add option to install fail2ban (activated by default)
 
 **v1.7.1**
@@ -100,7 +103,7 @@ Currently the technical caracteristics if the device are still missing and shoul
 - Option to enable the integrated Bluetooth (disabled by default)
 
 **v1.6**
-- Secure the system by adding security rules based on [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) 
+- Secure the system by adding security rules based on [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf)
 - Issue #49 : add a message on SSH login with current script version
 
 **v1.5**
@@ -119,7 +122,7 @@ Currently the technical caracteristics if the device are still missing and shoul
 
 **v1.4.8**
 - Issue #71 : create a one step download for all sources requirements and perform the download before any technical action
-- Bug : Correct typo for free disk space check 
+- Bug : Correct typo for free disk space check
 
 **v1.4.7**
 - Update Portal URL to link it to the Kupiki organization
@@ -131,7 +134,7 @@ Currently the technical caracteristics if the device are still missing and shoul
 
 **v1.4.5**
 - Changed default apt-get option _--force-yes_ with _--allow-remove-essential --allow-change-held-packages_
-- Add package _localepurge_ installation. One of the first to apply savings on all packages 
+- Add package _localepurge_ installation. One of the first to apply savings on all packages
 
 **v1.4.4**
 - Change update of hotspot IP in the configuration file of the portal
@@ -164,7 +167,7 @@ Currently the technical caracteristics if the device are still missing and shoul
 
 **v1.1**
 - Create a ready-to-use image
-- Add instructions to clear installation if the script is executed more than one time 
+- Add instructions to clear installation if the script is executed more than one time
 - Issue #41 : use LAN ip for web portal to avoid DHCP issues
 
 **v1.0**
@@ -173,7 +176,7 @@ Currently the technical caracteristics if the device are still missing and shoul
 
 **v0.9.2**
 - Replace call of _iptables_ by _ipt_ in _up.sh_
-- Issues #32 / #30 : block WAN access from LAN 
+- Issues #32 / #30 : block WAN access from LAN
 
 **v0.9.1**
 - Issue #38 : Replace Daloradius from Sourceforge with Github version (thank to reigelgallarde)
@@ -184,9 +187,9 @@ Currently the technical caracteristics if the device are still missing and shoul
 - Optimisations
   - All dependencies are installed in one time
   - Check that the script is executed as root
-  - Check that disk space is available 
+  - Check that disk space is available
 - Issue #14 : add a check for the tun module on Raspbian Jessie Lite
-- Issue #25 : force IPv4 for APT  
+- Issue #25 : force IPv4 for APT
 
 **v0.8**
 - Add a test to control that the script is executed by root or using sudo
@@ -220,4 +223,3 @@ Currently the technical caracteristics if the device are still missing and shoul
 
 **v0.1**
 - Initial release
-
