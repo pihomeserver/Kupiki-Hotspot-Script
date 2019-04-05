@@ -1,3 +1,6 @@
+**v2.1.1**
+- Issue #164 : add package libffi-dev in the installation process
+
 **v2.1.0**
 - Change authentication architecture in order to use a middleware nodeJS service to allow users registration capabilities
 

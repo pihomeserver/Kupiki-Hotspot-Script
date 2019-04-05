@@ -82,7 +82,7 @@ KUPIKI_ALLOW_REGISTER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.1.0"
+KUPIKI_VERSION="2.1.1"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -352,7 +352,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git wget )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake python python-pip )
+PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip )
 
 install_dependent_packages() {
 
