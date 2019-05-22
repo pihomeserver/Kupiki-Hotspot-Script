@@ -1,3 +1,9 @@
+**v2.1.2**
+- Improvement : replace sed commands on JSON files by jq to improve configuration management
+- Bug fix : update some Daloradius configuration parameters to be aligned with Kupiki installation
+- Bug fix : activate portal registration if the installation parameter KUPIKI_ALLOW_REGISTER is set to Y
+- Bug fix : add port 443 in TCP opened ports if the installation parameter HOTSPOT_HTTPS is set to Y
+
 **v2.1.1**
 - Issue #164 : add package libffi-dev in the installation process
 

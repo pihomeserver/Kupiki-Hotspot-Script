@@ -12,7 +12,35 @@ LOGNAME="kupiki_updater.log"
 LOGPATH="/var/log/"
 KUPIKI_SCRIPT_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/pihotspot.sh"
 
-declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12" "2.0.13" "2.1.0" "2.1.1")
+declare -a KUPIKI_UPDATES=("2.0.1" "2.0.2" "2.0.3" "2.0.4" "2.0.5" "2.0.6" "2.0.7" "2.0.8" "2.0.9" "2.0.10" "2.0.11" "2.0.12" "2.0.13" "2.1.0" "2.1.1" "2.1.2")
+
+upgrade_2.1.2() {
+  apt-get -y -qq install jq
+  check_returned_code $?
+
+  allCounters=`cat /etc/freeradius/3.0/mods-enabled/sqlcounter | grep "sqlcounter" | cut -d' ' -f2`
+  positionLine=`grep -m 1 -nr -e "^#.*daily$" /etc/freeradius/3.0/sites-enabled/default | cut -d: -f1`
+
+  display_message "Activating counters"
+  for counterName in $allCounters
+  do
+      sed -n -i "p;${positionLine}a ${counterName}" /etc/freeradius/3.0/sites-enabled/default
+  done
+  check_returned_code $?
+
+  display_message "Configuring daloradius DB proxy path"
+  sed -i "s/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '/etc/freeradius/proxy.conf';/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '/etc/freeradius/3.0/proxy.conf';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+  check_returned_code $?
+
+  display_message "Configuring daloradius DB proxy path"
+  sed -i "s/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '/var/www/daloradius/var';/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '/usr/share/nginx/html/daloradius/var';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+  check_returned_code $?
+
+  display_message "Update Chilli configuration to allow HTTPS in iptables"
+  sed -e 's/^HS_TCP_PORTS.*/HS_TCP_PORTS="5000 80 443"/' /etc/chilli/config > /tmp/config && cp /tmp/config /etc/chilli/config
+  check_returned_code $?
+
+}
 
 upgrade_2.1.1() {
   apt-get -y -qq install libffi-dev

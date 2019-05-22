@@ -82,7 +82,7 @@ KUPIKI_ALLOW_REGISTER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.1.1"
+KUPIKI_VERSION="2.1.2"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -352,7 +352,7 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git wget )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip )
+PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip jq)
 
 install_dependent_packages() {
 
@@ -531,13 +531,13 @@ execute_command "echo 'maria-db-$MARIADB_VERSION mysql-server/root_password_agai
 display_message "Getting WAN IP of the Raspberry Pi (for daloradius access)"
 MY_IP=`ifconfig $WAN_INTERFACE | grep "inet " | awk '{ print $2 }'`
 
+display_message "Updating the system hostname to $HOTSPOT_NAME"
+echo $HOTSPOT_NAME > /etc/hostname
+check_returned_code $?
+
 if [[ "$AVAHI_INSTALL" = "Y" ]]; then
     display_message "Adding Avahi dependencies"
     PIHOTSPOT_DEPS+=( avahi-daemon libavahi-client-dev )
-
-    display_message "Updating the system hostname to $HOTSPOT_NAME"
-    echo $HOTSPOT_NAME > /etc/hostname
-    check_returned_code $?
 
     execute_command "grep $HOTSPOT_NAME /etc/hosts" false "Updating /etc/hosts"
     if [[ $COMMAND_RESULT -ne 0 ]]; then
@@ -579,6 +579,10 @@ if [ $? -ne 0 ]; then
     gpasswd -a kupiki docker
     check_returned_code $?
 fi
+
+display_message "Install pika module"
+pip install pika
+check_returned_code $?
 
 type docker-compose 2> /dev/null
 if [ $? -ne 0 ]; then
@@ -776,6 +780,16 @@ if [[ "$KUPIKI_SQL_COUNTERS" = "Y" ]]; then
     execute_command "cp -f /usr/src/sqlcounter /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Adding CoovaChilli counters (limit bandwidth)"
 
     execute_command "chown freerad:freerad /etc/freeradius/3.0/mods-enabled/sqlcounter" true "Updating file access rights"
+
+    allCounters=`cat /etc/freeradius/3.0/mods-enabled/sqlcounter | grep "sqlcounter" | cut -d' ' -f2`
+    positionLine=`grep -m 1 -nr -e "^#.*daily$" /etc/freeradius/3.0/sites-enabled/default | cut -d: -f1`
+
+    display_message "Activating counters"
+    for counterName in $allCounters
+    do
+        sed -n -i "p;${positionLine}a ${counterName}" /etc/freeradius/3.0/sites-enabled/default
+    done
+    check_returned_code $?
 fi
 
 execute_command "freeradius -C" true "Checking freeradius configuration"
@@ -906,6 +920,11 @@ if [[ "$DALORADIUS_INSTALL" = "Y" ]]; then
     display_message "Configuring daloradius DB user password"
     sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
     check_returned_code $?
+    display_message "Configuring daloradius DB proxy configuration file"
+    sed -i "s/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/proxy.conf';/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/3.0\/proxy.conf';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php    check_returned_code $?
+    display_message "Configuring daloradius DB proxy path"
+    sed -i "s/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '\/var\/www\/daloradius\/var';/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '\/usr\/share\/ngin\/html\/daloradius\/var';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+    check_returned_code $?
 
     display_message "Building NGINX configuration (default listen port : 80)"
     echo '
@@ -964,6 +983,10 @@ server {
        		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
        	}
 }" > /etc/nginx/sites-available/portal
+
+    display_message "Update Chilli configuration to allow HTTPS in iptables"
+    sed -e 's/^HS_TCP_PORTS.*/HS_TCP_PORTS="5000 80 443"/' /etc/chilli/config > /tmp/config && cp /tmp/config /etc/chilli/config
+    check_returned_code $?
 else
     echo "
 server {
@@ -991,8 +1014,12 @@ execute_command "ln -sfT /etc/nginx/sites-available/portal /etc/nginx/sites-enab
 
 execute_command "cp -Rf /usr/src/portal /usr/share/nginx/" true "Installing the portal in Nginx folder"
 
-display_message "Updating Captive Portal configuration file"
-sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json
+display_message "Updating Captive Portal configuration file - Register host"
+# sed -i "/XXXXXX/s/XXXXXX/$HOTSPOT_IP/g" /usr/share/nginx/portal/js/configuration.json
+jq --arg hostip $HOTSPOT_IP '.register.host = $hostip' /usr/share/nginx/portal/js/configuration.json > /tmp/configuration.json && cp /tmp/configuration.json /usr/share/nginx/portal/js/configuration.json
+check_returned_code $?
+display_message "Updating Captive Portal configuration file - Chilli Controller host"
+jq --arg hostip $HOTSPOT_IP '.chilliController.host = $hostip' /usr/share/nginx/portal/js/configuration.json > /tmp/configuration.json && cp /tmp/configuration.json /usr/share/nginx/portal/js/configuration.json
 check_returned_code $?
 
 execute_command "nginx -t" true "Checking Nginx configuration file"
@@ -1000,7 +1027,12 @@ execute_command "nginx -t" true "Checking Nginx configuration file"
 execute_command "cp -Rf /usr/src/kupiki-portal-backend /home/kupiki/" true "Installing the portal backend in the user kupiki home folder"
 
 display_message "Updating Captive Portal backend configuration file"
-sed -i "/pihotspot/s/pihotspot/$MYSQL_PASSWORD/g" /home/kupiki/kupiki-portal-backend/app/src/config.json
+# sed -i "/pihotspot/s/pihotspot/$MYSQL_PASSWORD/g" /home/kupiki/kupiki-portal-backend/app/src/config.json
+jq --arg password $MYSQL_PASSWORD '.sequelize.freeradius.password = $password' /home/kupiki/kupiki-portal-backend/app/src/config.json > /tmp/config.json && cp /tmp/config.json /home/kupiki/kupiki-portal-backend/app/src/config.json
+check_returned_code $?
+
+display_message "Update rights for NGINX sites"
+chown -R www-data:www-data /usr/share/nginx/*
 check_returned_code $?
 
 execute_command "chown -R kupiki:kupiki /home/kupiki/kupiki-portal-backend"
@@ -1039,6 +1071,9 @@ if [ "$KUPIKI_ALLOW_REGISTER" = "Y" ]; then
     check_returned_code $?
     display_message "Starting Kupiki Portal Backend service"
     /bin/systemctl start kupiki-portal-backend
+    check_returned_code $?
+    display_message "Activating registration in the Portal site"
+    jq '.register.active = true' /usr/share/nginx/portal/js/configuration.json > /tmp/configuration.json && cp /tmp/configuration.json /usr/share/nginx/portal/js/configuration.json
     check_returned_code $?
 fi
 
