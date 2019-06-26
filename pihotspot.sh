@@ -587,7 +587,7 @@ check_returned_code $?
 type docker-compose 2> /dev/null
 if [ $? -ne 0 ]; then
     display_message "Install docker-compose"
-    pip install docker-compose
+    pip install docker-compose~=1.23.0
     check_returned_code $?
 fi
 
