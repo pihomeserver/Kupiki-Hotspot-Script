@@ -82,7 +82,7 @@ KUPIKI_ALLOW_REGISTER=Y
 # *************************************
 
 # Current script version
-KUPIKI_VERSION="2.1.2"
+KUPIKI_VERSION="2.1.3"
 # Updater location
 KUPIKI_UPDATER_ARCHIVE="https://raw.githubusercontent.com/pihomeserver/Kupiki-Hotspot-Script/master/kupiki_updater.sh"
 # Default Portal port
@@ -94,6 +94,8 @@ if [ "$HOTSPOT_HTTPS" = "Y" ]; then
     HOTSPOT_PROTOCOL="https:\/\/"
 fi
 
+# Minimal version for Debian
+DEBIAN_MINIMAL_VERSION=9.0
 # Default version of MariaDB
 MARIADB_VERSION='10.1'
 # CoovaChilli GIT URL
@@ -434,6 +436,8 @@ check_previous_execution() {
     fi
 }
 
+version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+
 check_root
 
 check_previous_execution
@@ -465,10 +469,10 @@ else
 	exit 1;
 fi
 
-DEBIAN_VERSION=`cat /etc/*-release | grep VERSION_ID | awk -F= '{print $2}' | sed -e 's/^"//' -e 's/"$//'`
-if [[ $DEBIAN_VERSION -ne 9 ]];then
+DEBIAN_VERSION=`cat /etc/debian_version`
+if version_gt $DEBIAN_MINIMAL_VERSION $DEBIAN_VERSION; then
 	display_message ""
-	display_message "This script is used to get installed on Raspbian Stretch Lite"
+	display_message "This script is used to get installed on Raspbian Lite (9+)"
 	display_message ""
 	exit 1
 fi

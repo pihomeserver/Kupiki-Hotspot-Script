@@ -38,11 +38,11 @@ Requirements
 ============
 
 What are the requirements ?
-- A Raspberry Pi 3 or 3B+
+- A Raspberry Pi 3 or 3B+ (not tested yet on a Raspberry pi 4)
 - An ethernet cable
 - A power supply for the Raspberry Pi
 - An internet access of course
-- A 4Gb micro SD card with a raspbian-like OS installed like the official [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
+- A 4Gb micro SD card with a raspbian-like OS (9+) installed like the official [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/). No warranty that it will work with OSes like Official Raspbian, Ubuntu Mate Xenial, etc.
 
 Installation
 =====
