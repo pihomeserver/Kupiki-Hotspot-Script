@@ -1,5 +1,5 @@
 **v2.1.3**
-- Add support for Raspbian Lite Buster
+- Add support for Raspbian Lite Buster with packages updates
 
 **v2.1.2**
 - Improvement : replace sed commands on JSON files by jq to improve configuration management

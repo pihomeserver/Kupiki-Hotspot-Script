@@ -354,7 +354,8 @@ package_check_install() {
 
 PIHOTSPOT_DEPS_START=( apt-transport-https localepurge git wget )
 PIHOTSPOT_DEPS_WIFI=( apt-utils firmware-brcm80211 firmware-ralink firmware-realtek )
-PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip jq)
+#PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip jq)
+PIHOTSPOT_DEPS=( build-essential grep whiptail debconf-utils nfdump figlet git fail2ban hostapd php-mysql php-pear php-gd php-db php-fpm libgd-dev libpcrecpp0v5 libxpm4 nginx debhelper libssl-dev libcurl4-gnutls-dev mariadb-server freeradius freeradius-mysql gcc make pkg-config iptables haserl libjson-c-dev gengetopt devscripts libtool bash-completion autoconf automake libffi-dev python python-pip jq docker docker-compose)
 
 install_dependent_packages() {
 
@@ -556,12 +557,12 @@ display_message "Correct configuration for Collectd daemon"
 sed -i "s/^FQDNLookup true$/FQDNLookup false/g" /etc/collectd/collectd.conf
 check_returned_code $?
 
-type docker 2> /dev/null
-if [ $? -ne 0 ]; then
-    display_message "Install Docker"
-    curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
-    check_returned_code $?
-fi
+# type docker 2> /dev/null
+# if [ $? -ne 0 ]; then
+#     display_message "Install Docker"
+#     curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+#     check_returned_code $?
+# fi
 
 id -u kupiki > /dev/null
 if [ $? -ne 0 ]; then
@@ -588,12 +589,12 @@ display_message "Install pika module"
 pip install pika
 check_returned_code $?
 
-type docker-compose 2> /dev/null
-if [ $? -ne 0 ]; then
-    display_message "Install docker-compose"
-    pip install docker-compose~=1.23.0
-    check_returned_code $?
-fi
+# type docker-compose 2> /dev/null
+# if [ $? -ne 0 ]; then
+#     display_message "Install docker-compose"
+#     pip install docker-compose~=1.23.0
+#     check_returned_code $?
+# fi
 
 if [[ "$NETFLOW_ENABLED" = "Y" ]]; then
     DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-remove-essential --allow-change-held-packages fprobe nfdump
@@ -925,7 +926,8 @@ if [[ "$DALORADIUS_INSTALL" = "Y" ]]; then
     sed -i "s/\$configValues\['CONFIG_DB_PASS'\] = '';/\$configValues\['CONFIG_DB_PASS'\] = 'radpass';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
     check_returned_code $?
     display_message "Configuring daloradius DB proxy configuration file"
-    sed -i "s/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/proxy.conf';/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/3.0\/proxy.conf';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php    check_returned_code $?
+    sed -i "s/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/proxy.conf';/\$configValues\['CONFIG_FILE_RADIUS_PROXY'\] = '\/etc\/freeradius\/3.0\/proxy.conf';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
+    check_returned_code $?
     display_message "Configuring daloradius DB proxy path"
     sed -i "s/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '\/var\/www\/daloradius\/var';/\$configValues\['CONFIG_PATH_DALO_VARIABLE_DATA'\] = '\/usr\/share\/ngin\/html\/daloradius\/var';/g" /usr/share/nginx/html/daloradius/library/daloradius.conf.php
     check_returned_code $?
@@ -1042,6 +1044,7 @@ check_returned_code $?
 execute_command "chown -R kupiki:kupiki /home/kupiki/kupiki-portal-backend"
 
 display_message "Build the Docker image of Portal backend"
+#su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && /usr/local/bin/docker-compose build"
 su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && /usr/local/bin/docker-compose build"
 check_returned_code $?
 
