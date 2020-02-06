@@ -1043,9 +1043,10 @@ check_returned_code $?
 
 execute_command "chown -R kupiki:kupiki /home/kupiki/kupiki-portal-backend"
 
+DOCKER_COMPOSE=$(which docker-compose)
 display_message "Build the Docker image of Portal backend"
-#su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && /usr/local/bin/docker-compose build"
-su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && /usr/local/bin/docker-compose build"
+#su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && $DOCKER_COMPOSE build"
+su - kupiki -c "cd /home/kupiki/kupiki-portal-backend && $DOCKER_COMPOSE build"
 check_returned_code $?
 
 # Make startup of docker compose as a service (after Docker)
@@ -1061,8 +1062,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/home/kupiki/kupiki-portal-backend
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose stop
+ExecStart=$DOCKER_COMPOSE up -d
+ExecStop=$DOCKER_COMPOSE stop
 
 [Install]
 WantedBy=default.target
