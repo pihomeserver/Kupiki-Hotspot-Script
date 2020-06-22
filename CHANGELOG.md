@@ -1,3 +1,6 @@
+**v2.1.4**
+- Replace php-fpm 7.0 with 7.3 version
+
 **v2.1.3**
 - Add support for Raspbian Lite Buster with packages updates
 
