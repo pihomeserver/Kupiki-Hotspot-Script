@@ -24,14 +24,6 @@ Once the script is executed, you will get :
 
 The installed system have been secured using [ANSSI security recommendation](https://www.ssi.gouv.fr/uploads/IMG/cspn/anssi-cspn_2009-04fr.pdf) and is compliant with french laws about free wifi hotspots ([R. 10-13 et R. 10-14 , IV of CPCE](https://www.cdse.fr/wifi-et-conservation-des-donnees))
 
-Support my work
-=======
-
-Love Kupiki Hotspot or want to support it? Check out my [patreon page](https://www.patreon.com/pihomeserver) :)
-
-[![patreonLink](http://www.pihomeserver.fr/hosting/patreon/patreon_1.png)](https://www.patreon.com/pihomeserver)
-
-
 To contribute, you can [open an issue](https://github.com/pihomeserver/Kupiki-Hotspot-Script/issues) and/or fork this repository.
 
 Requirements
